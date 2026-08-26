@@ -1,0 +1,16 @@
+{
+  "name": "Voxnote",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker",
+        "DevidAnson.vscode-markdownlint"
+      ]
+    }
+  }
+}
