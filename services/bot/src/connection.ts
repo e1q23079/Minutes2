@@ -38,4 +38,12 @@ export default class Connection {
     this.connection.destroy();
     this.connection = null;
   }
+
+  /*
+   * ボイスチャンネルに接続しているかどうかを取得する関数
+   * @returns {boolean} ボイスチャンネルに接続している場合は true を返し、接続していない場合は false を返す
+   */
+  public getConnectionStatus(): boolean {
+    return this.connection !== null;
+  }
 }

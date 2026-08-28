@@ -56,13 +56,20 @@ function getVoiceChannel(
 }
 
 /*
- * ボイスチャンネルが使用中かどうかを取得する関数
+ * ボイスチャンネルの状況を取得する関数
  * @param channel ボイスチャンネル
- * @returns {boolean} ボイスチャンネルが使用中かどうか
+ * @returns {string} ボイスチャンネルの状況
  */
-function getVoiceChannelStatus(channel: VoiceBasedChannel): boolean {
+function getVoiceChannelStatus(channel: VoiceBasedChannel): string {
   const members = channel.members.filter((member) => !member.user.bot);
-  return members.size > 0;
+  const num = members.size;
+  if (num === 0) {
+    return "empty";
+  } else if (num === 1) {
+    return "one";
+  } else {
+    return "many";
+  }
 }
 
 export {
