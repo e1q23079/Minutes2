@@ -4,9 +4,16 @@ import type { VoiceBasedChannel } from "discord.js";
 export default class Connection {
   private channel: VoiceBasedChannel;
   private connection: VoiceConnection | null = null;
+  /*
+   * ボイスチャンネルに接続するクラス
+   * @param channel ボイスチャンネル
+   */
   constructor(channel: VoiceBasedChannel) {
     this.channel = channel;
   }
+  /*
+   * ボイスチャンネルに接続する関数
+   */
   public connect(): void {
     if (this.connection) {
       return;
@@ -17,7 +24,9 @@ export default class Connection {
       adapterCreator: this.channel.guild.voiceAdapterCreator,
     });
   }
-
+  /*
+   * ボイスチャンネルから切断する関数
+   */
   public disconnect(): void {
     if (!this.connection) {
       return;
