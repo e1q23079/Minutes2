@@ -13,18 +13,20 @@ export default class Connection {
   }
   /*
    * ボイスチャンネルに接続する関数
+   * @returns {VoiceConnection | null} 接続に成功した場合は VoiceConnection を返し、失敗した場合は null を返す
    */
-  public connect(): void {
+  public connect(): VoiceConnection | null {
     if (this.connection) {
-      return;
+      return null;
     }
     this.connection = joinVoiceChannel({
       channelId: this.channel.id,
       guildId: this.channel.guild.id,
       adapterCreator: this.channel.guild.voiceAdapterCreator,
       selfDeaf: false,
-      selfMute: true, // 自分の音声をミュートにする
+      selfMute: false,
     });
+    return this.connection;
   }
   /*
    * ボイスチャンネルから切断する関数

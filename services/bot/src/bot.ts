@@ -7,6 +7,10 @@ import {
   getVoiceChannelStatus,
 } from "./channel.js";
 import type { VoiceBasedChannel } from "discord.js";
+import type { VoiceConnection } from "@discordjs/voice";
+import { playAnnounce } from "./audio.js";
+
+const ENTER_VC_WAIT_TIME = 5; // ボイスチャンネルにユーザーが参加してからボットが接続するまでの待機時間（ミリ秒）
 
 /**
  * Discord Bot を管理するクラス
@@ -58,7 +62,10 @@ export default class Bot {
         console.log(
           "ボイスチャンネルにユーザーが参加しました。接続を開始します。",
         );
-        this.connection?.connect();
+        // 1分後にボットを接続する
+        setTimeout(() => {
+          this.enterVCProcess();
+        }, ENTER_VC_WAIT_TIME * 1000);
       } else if (
         getLeaveVCStatus(oldState, newState, this.voice_channel_id) &&
         !getVoiceChannelStatus(oldState.channel!)
@@ -79,5 +86,19 @@ export default class Bot {
    */
   public async stop(): Promise<void> {
     await this.client.destroy();
+  }
+
+  /*
+   * ボイスチャンネルでの処理を開始する関数
+   * @returns {void}
+   */
+  public async enterVCProcess(): Promise<void> {
+    const connection = this.connection?.connect();
+    // 5秒後に音声を再生する
+    setTimeout(() => {
+      if (connection) {
+        playAnnounce(connection);
+      }
+    }, 5 * 1000);
   }
 }
