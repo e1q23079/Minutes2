@@ -136,7 +136,7 @@ class AudioReceiver {
    * @param audioBuffer 音声データのBuffer
    * @returns {Promise<string | null>} 文字起こし結果の文字列、または null
    */
-  public async transcribePcm(audioBuffer: Buffer) {
+  private async transcribePcm(audioBuffer: Buffer) {
     try {
       // PCM 16bit から Float32Array に変換
       const samples = new Float32Array(audioBuffer.length / 2);

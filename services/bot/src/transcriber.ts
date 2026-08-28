@@ -9,7 +9,7 @@ let transcriber: AutomaticSpeechRecognitionPipeline | null = null;
  * Whisperの初期化を行う関数
  */
 async function initialize() {
-  console.log("Whisperの初期化を開始します...");
+  console.log("Whisperの初期化をしています...");
   transcriber = await pipeline(
     "automatic-speech-recognition",
     "onnx-community/whisper-small",
