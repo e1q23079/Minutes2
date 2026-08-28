@@ -48,6 +48,7 @@ class AudioReceiver {
   private userAudioChunks = new Map<string, Buffer[]>(); // ユーザーごとの音声データを格納するマップ
   private activeUserStreams = new Map<string, AudioReceiveStream>(); // ユーザーごとの音声ストリームのタイマーを格納するマップ
   private isTranscribing = false; // 文字起こし中かどうかのフラグ
+  private isRunning = false; // 音声受信中かどうかのフラグ
   /*
    * 音声受信を開始する関数
    * @param connection 接続情報
@@ -59,7 +60,8 @@ class AudioReceiver {
    * 音声受信を開始する関数
    * @returns {Promise<void>}
    */
-  public async startAudioReceiver(): Promise<void> {
+  public async start(): Promise<void> {
+    this.isRunning = true;
     const receiver = this.connection.receiver;
     receiver.speaking.on("start", (userId) => {
       if (this.activeUserStreams.has(userId)) {
@@ -99,6 +101,15 @@ class AudioReceiver {
     this.transcribeAudioChunks();
   }
 
+  /*
+   * 音声受信を停止する関数
+   * @returns {Promise<void>}
+   */
+  public async stop(): Promise<void> {
+    this.isRunning = false;
+    this.transcribeAudioChunks();
+  }
+
   private async transcribeAudioChunks(): Promise<void> {
     setTimeout(async () => {
       if (this.isTranscribing) {
@@ -126,7 +137,9 @@ class AudioReceiver {
         console.error("文字起こし中にエラーが発生しました:", error);
       } finally {
         this.isTranscribing = false;
-        this.transcribeAudioChunks(); // 再帰的に呼び出して、次の文字起こしを行う
+        if (this.isRunning) {
+          this.transcribeAudioChunks(); // 再帰的に呼び出して、次の文字起こしを行う
+        }
       }
     }, this.AUDIO_RECOGNITION_INTERVAL * 1000);
   }

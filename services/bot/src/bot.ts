@@ -26,6 +26,7 @@ export default class Bot {
   private botStatus: boolean = false; // ボットの接続状態を管理するフラグ
   private processTimer: NodeJS.Timeout | null = null; // タイマーを管理する変数
   private isProcessing: boolean = false; // ボイスチャンネルでの処理中かどうかを管理するフラグ
+  private audioReceiver: AudioReceiver | null = null; // AudioReceiverのインスタンスを保持する変数
   /**
    * Discord Bot を初期化する
    * @param api_key Discord Bot の API キー
@@ -117,10 +118,12 @@ export default class Bot {
           console.error("ボイスチャンネルへの接続に失敗しました。");
           return;
         }
-        const audioReceiver = new AudioReceiver(connection);
+        this.audioReceiver = new AudioReceiver(connection);
         playAnnounce(connection);
-        await audioReceiver.startAudioReceiver();
+        await this.audioReceiver.start();
       } else {
+        await this.audioReceiver?.stop();
+        this.audioReceiver = null;
         this.connection?.disconnect();
       }
     } catch (error) {
