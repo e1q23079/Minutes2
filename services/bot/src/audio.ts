@@ -98,7 +98,7 @@ class AudioReceiver {
         this.activeUserStreams.delete(userId);
       });
     });
-    this.transcribeAudioChunks();
+    this.loopTranscribeTerm();
   }
 
   /*
@@ -110,38 +110,43 @@ class AudioReceiver {
     this.transcribeAudioChunks();
   }
 
+  private async loopTranscribeTerm(): Promise<void> {
+    setTimeout(
+      async () => this.transcribeAudioChunks(),
+      this.AUDIO_RECOGNITION_INTERVAL * 1000,
+    );
+  }
+
   private async transcribeAudioChunks(): Promise<void> {
-    setTimeout(async () => {
-      if (this.isTranscribing) {
-        console.log("文字起こし中のため、次の文字起こしをスキップします。");
-        this.userAudioChunks.clear(); // 文字起こし中に新しい音声データが追加されるのを防ぐため、音声データをクリアする
-        this.transcribeAudioChunks(); // 再帰的に呼び出して、次の文字起こしを行う
+    if (this.isTranscribing) {
+      console.log("文字起こし中のため、次の文字起こしをスキップします。");
+      this.userAudioChunks.clear(); // 文字起こし中に新しい音声データが追加されるのを防ぐため、音声データをクリアする
+      this.loopTranscribeTerm(); // 再帰的に呼び出して、次の文字起こしを行う
+      return;
+    }
+    this.isTranscribing = true;
+    try {
+      const allChunks: Buffer[] = [];
+      for (const [userId, chunks] of this.userAudioChunks.entries()) {
+        allChunks.push(...chunks);
+        this.userAudioChunks.set(userId, []);
+      }
+      if (allChunks.length === 0) {
         return;
       }
-      this.isTranscribing = true;
-      try {
-        const allChunks: Buffer[] = [];
-        for (const [userId, chunks] of this.userAudioChunks.entries()) {
-          allChunks.push(...chunks);
-          this.userAudioChunks.set(userId, []);
-        }
-        if (allChunks.length === 0) {
-          return;
-        }
-        const audioBuffer = Buffer.concat(allChunks);
-        const text = await this.transcribePcm(audioBuffer);
-        if (text) {
-          console.log(`文字起こし結果 > ${text}`);
-        }
-      } catch (error) {
-        console.error("文字起こし中にエラーが発生しました:", error);
-      } finally {
-        this.isTranscribing = false;
-        if (this.isRunning) {
-          this.transcribeAudioChunks(); // 再帰的に呼び出して、次の文字起こしを行う
-        }
+      const audioBuffer = Buffer.concat(allChunks);
+      const text = await this.transcribePcm(audioBuffer);
+      if (text) {
+        console.log(`文字起こし結果 > ${text}`);
       }
-    }, this.AUDIO_RECOGNITION_INTERVAL * 1000);
+    } catch (error) {
+      console.error("文字起こし中にエラーが発生しました:", error);
+    } finally {
+      this.isTranscribing = false;
+      if (this.isRunning) {
+        this.loopTranscribeTerm(); // 再帰的に呼び出して、次の文字起こしを行う
+      }
+    }
   }
 
   /*
