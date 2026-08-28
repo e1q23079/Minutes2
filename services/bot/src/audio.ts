@@ -1,40 +1,8 @@
-import {
-  AudioPlayerStatus,
-  createAudioPlayer,
-  createAudioResource,
-  EndBehaviorType,
-  AudioReceiveStream,
-} from "@discordjs/voice";
+import { EndBehaviorType, AudioReceiveStream } from "@discordjs/voice";
 import prism from "prism-media";
-import type { VoiceConnection, AudioResource } from "@discordjs/voice";
+import type { VoiceConnection } from "@discordjs/voice";
 import Transcriber from "./transcriber.js";
 import waveResampler from "wave-resampler";
-
-/*
- * 音声を再生する関数
- * @param connection 接続情報
- * @returns {void}
- */
-function playAnnounce(connection: VoiceConnection): void {
-  const player = createAudioPlayer();
-
-  player.on("error", (error) => {
-    console.error("音声再生中にエラーが発生しました:", error);
-  });
-
-  player.on(AudioPlayerStatus.Playing, () => {
-    console.log("音声再生が開始されました。");
-  });
-
-  player.on(AudioPlayerStatus.Idle, () => {
-    console.log("音声再生が終了しました。");
-  });
-
-  connection.subscribe(player);
-
-  const resource: AudioResource = createAudioResource("./announce.wav");
-  player.play(resource);
-}
 
 class AudioReceiver {
   /*
@@ -194,4 +162,4 @@ class AudioReceiver {
   }
 }
 
-export { AudioReceiver, playAnnounce };
+export { AudioReceiver };

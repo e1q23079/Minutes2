@@ -7,7 +7,6 @@ import {
   getVoiceChannelStatus,
 } from "./channel.js";
 import type { VoiceBasedChannel } from "discord.js";
-import { playAnnounce } from "./audio.js";
 import { AudioReceiver } from "./audio.js";
 import Transcriber from "./transcriber.js";
 
@@ -119,7 +118,7 @@ export default class Bot {
           return;
         }
         this.audioReceiver = new AudioReceiver(connection);
-        playAnnounce(connection);
+        this.connection?.playAnnounce();
         await this.audioReceiver.start();
       } else {
         await this.audioReceiver?.stop();

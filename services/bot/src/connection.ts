@@ -1,9 +1,16 @@
-import { VoiceConnection, joinVoiceChannel } from "@discordjs/voice";
+import {
+  AudioPlayer,
+  createAudioPlayer,
+  createAudioResource,
+  VoiceConnection,
+  joinVoiceChannel,
+} from "@discordjs/voice";
 import type { VoiceBasedChannel } from "discord.js";
 
 export default class Connection {
   private channel: VoiceBasedChannel;
   private connection: VoiceConnection | null = null;
+  private player: AudioPlayer | null = null;
   /*
    * ボイスチャンネルに接続するクラス
    * @param channel ボイスチャンネル
@@ -32,6 +39,8 @@ export default class Connection {
    * ボイスチャンネルから切断する関数
    */
   public disconnect(): void {
+    this.player?.stop();
+    this.player = null;
     if (!this.connection) {
       return;
     }
@@ -45,5 +54,21 @@ export default class Connection {
    */
   public getConnectionStatus(): boolean {
     return this.connection !== null;
+  }
+
+  public playAnnounce(): void {
+    if (!this.connection) {
+      return;
+    }
+    if (!this.player) {
+      this.player = createAudioPlayer();
+      this.player.on("error", (error) => {
+        console.error("音声再生中にエラーが発生しました:", error);
+      });
+      this.connection.subscribe(this.player);
+    }
+    const resource = createAudioResource("./announce.wav");
+    console.log("音声再生を開始しました。");
+    this.player.play(resource);
   }
 }
