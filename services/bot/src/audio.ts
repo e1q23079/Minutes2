@@ -17,6 +17,7 @@ class AudioReceiver {
   private activeUserStreams = new Map<string, AudioReceiveStream>(); // ユーザーごとの音声ストリームのタイマーを格納するマップ
   private isTranscribing = false; // 文字起こし中かどうかのフラグ
   private isRunning = false; // 音声受信中かどうかのフラグ
+  private transcribeTimer: NodeJS.Timeout | null = null; // 文字起こしのタイマーを格納する変数
   /*
    * 音声受信を開始する関数
    * @param connection 接続情報
@@ -75,11 +76,15 @@ class AudioReceiver {
    */
   public async stop(): Promise<void> {
     this.isRunning = false;
-    this.transcribeAudioChunks();
+    if (this.transcribeTimer) {
+      clearTimeout(this.transcribeTimer);
+      this.transcribeTimer = null;
+    }
+    await this.transcribeAudioChunks();
   }
 
   private async loopTranscribeTerm(): Promise<void> {
-    setTimeout(
+    this.transcribeTimer = setTimeout(
       async () => this.transcribeAudioChunks(),
       this.AUDIO_RECOGNITION_INTERVAL * 1000,
     );
