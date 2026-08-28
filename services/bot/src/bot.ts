@@ -9,7 +9,7 @@ import {
 import type { VoiceBasedChannel } from "discord.js";
 import { playAnnounce } from "./audio.js";
 
-const ENTER_VC_WAIT_TIME = 5; // ボイスチャンネルにユーザーが参加してからボットが接続するまでの待機時間（ミリ秒）
+const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
 
 /**
  * Discord Bot を管理するクラス
@@ -20,6 +20,8 @@ export default class Bot {
   private client: Client;
   private channel: VoiceBasedChannel | null = null;
   private connection: Connection | null = null;
+  private botStatus: boolean = false; // ボットの接続状態を管理するフラグ
+  private processTimer: NodeJS.Timeout | null = null; // タイマーを管理する変数
   /**
    * Discord Bot を初期化する
    * @param api_key Discord Bot の API キー
@@ -61,10 +63,11 @@ export default class Bot {
         console.log(
           "ボイスチャンネルにユーザーが参加しました。接続を開始します。",
         );
+        this.botStatus = true;
         // 1分後にボットを接続する
-        setTimeout(() => {
-          this.enterVCProcess();
-        }, ENTER_VC_WAIT_TIME * 1000);
+        this.processTimer = setTimeout(() => {
+          this.VCProcess();
+        }, VC_WAIT_TIME * 1000);
       } else if (
         getLeaveVCStatus(oldState, newState, this.voice_channel_id) &&
         getVoiceChannelStatus(oldState.channel!) === "empty"
@@ -72,7 +75,11 @@ export default class Bot {
         console.log(
           "ボイスチャンネルからユーザーが退出しました。接続を切断します。",
         );
-        this.connection?.disconnect();
+        this.botStatus = false;
+        //１分後にボットを切断する
+        this.processTimer = setTimeout(() => {
+          this.VCProcess();
+        }, VC_WAIT_TIME * 1000);
       }
     });
 
@@ -84,31 +91,26 @@ export default class Bot {
    * @returns Promise<void>
    */
   public async stop(): Promise<void> {
+    if (this.processTimer) {
+      clearTimeout(this.processTimer);
+    }
     await this.client.destroy();
   }
 
-  /*
-   * ボイスチャンネルでの処理を開始する関数
+  /**
+   * ボイスチャンネルでの処理
    * @returns {void}
    */
-  public async enterVCProcess(): Promise<void> {
-    if (this.connection?.getConnectionStatus()) {
-      console.log("ボイスチャンネルに既に接続しています。");
-      return;
-    }
-    if (this.connection === null) {
-      return;
-    }
-    const connection = this.connection.connect();
-    if (!connection) {
-      console.error("ボイスチャンネルへの接続に失敗しました。");
-      return;
-    }
-    // 5秒後に音声を再生する
-    setTimeout(() => {
-      if (getVoiceChannelStatus(this.channel!) !== "empty") {
-        playAnnounce(connection);
+  public async VCProcess(): Promise<void> {
+    if (!this.botStatus) {
+      this.connection?.disconnect();
+    } else {
+      const connection = this.connection?.connect();
+      if (!connection) {
+        console.error("ボイスチャンネルへの接続に失敗しました。");
+        return;
       }
-    }, 5 * 1000);
+      playAnnounce(connection);
+    }
   }
 }
