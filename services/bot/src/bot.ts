@@ -8,10 +8,10 @@ export default class Bot {
   private voice_channel_id: string;
   private client: Client;
   /**
-  * Discord Bot を初期化する
-  * @param api_key Discord Bot の API キー
-  * @param voice_channel_id Discord Bot が接続するボイスチャンネルの ID
-  */
+   * Discord Bot を初期化する
+   * @param api_key Discord Bot の API キー
+   * @param voice_channel_id Discord Bot が接続するボイスチャンネルの ID
+   */
   constructor(api_key: string, voice_channel_id: string) {
     this.api_key = api_key;
     this.voice_channel_id = voice_channel_id;
@@ -25,6 +25,10 @@ export default class Bot {
    * @returns Promise<void>
    */
   public async start(): Promise<void> {
+    this.client.on("error", (error) => {
+      console.error("Discord Bot でエラーが発生しました:", error);
+    });
+    
     this.client.once("clientReady", () => {
       console.log("Discord Bot が起動しました。");
     });

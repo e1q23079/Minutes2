@@ -9,14 +9,14 @@
       "version": "24"
     }
   },
-  "postCreateCommand": "cd services/ts/bot && npm install",
+  "postCreateCommand": "cd services/bot && npm install",
   "customizations": {
     "vscode": {
       "extensions": [
         "esbenp.prettier-vscode",
         "dbaeumer.vscode-eslint",
         "ms-azuretools.vscode-docker",
-        "DevidAnson.vscode-markdownlint"
+        "DavidAnson.vscode-markdownlint"
       ]
     }
   }

@@ -3,6 +3,6 @@
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
     "ms-azuretools.vscode-docker",
-    "DevidAnson.vscode-markdownlint"
+    "DavidAnson.vscode-markdownlint"
   ]
 }
