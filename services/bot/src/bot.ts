@@ -21,6 +21,7 @@ export default class Bot {
   private client: Client;
   private channel: VoiceBasedChannel | null = null;
   private connection: Connection | null = null;
+  private botPrevStatus: boolean = false; // ボットの前回の接続状態を管理するフラグ
   private botStatus: boolean = false; // ボットの接続状態を管理するフラグ
   private processTimer: NodeJS.Timeout | null = null; // タイマーを管理する変数
   /**
@@ -66,6 +67,7 @@ export default class Bot {
         );
         // 1分後にボットを接続する
         this.botStatus = true;
+        this.botPrevStatus = false;
         this.setProcessTimer();
       } else if (
         getLeaveVCStatus(oldState, newState, this.voice_channel_id) &&
@@ -76,6 +78,7 @@ export default class Bot {
         );
         //１分後にボットを切断する
         this.botStatus = false;
+        this.botPrevStatus = true;
         this.setProcessTimer();
       }
     });
@@ -100,6 +103,10 @@ export default class Bot {
    * @returns {void}
    */
   public async VCProcess(): Promise<void> {
+    // ボットの接続状態が変化していない場合は処理をスキップする
+    if (this.botPrevStatus === this.botStatus) {
+      return;
+    }
     if (this.botStatus) {
       const connection = this.connection?.connect();
       if (!connection) {
