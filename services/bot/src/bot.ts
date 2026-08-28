@@ -1,6 +1,11 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import Connection from "./connection.js";
-import { getVoiceChannel, getVoiceChannelStatus } from "./channel.js";
+import {
+  getEnterVCStatus,
+  getLeaveVCStatus,
+  getVoiceChannel,
+  getVoiceChannelStatus,
+} from "./channel.js";
 import type { VoiceBasedChannel } from "discord.js";
 
 /**
@@ -47,7 +52,7 @@ export default class Bot {
 
     this.client.on("voiceStateUpdate", (oldState, newState) => {
       if (
-        newState.channelId === this.voice_channel_id &&
+        getEnterVCStatus(oldState, newState, this.voice_channel_id) &&
         getVoiceChannelStatus(newState.channel!)
       ) {
         console.log(
@@ -55,7 +60,7 @@ export default class Bot {
         );
         this.connection?.connect();
       } else if (
-        oldState.channelId === this.voice_channel_id &&
+        getLeaveVCStatus(oldState, newState, this.voice_channel_id) &&
         !getVoiceChannelStatus(oldState.channel!)
       ) {
         console.log(

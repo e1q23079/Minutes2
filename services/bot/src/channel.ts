@@ -1,4 +1,42 @@
-import type { Client, VoiceBasedChannel } from "discord.js";
+import type { VoiceState, Client, VoiceBasedChannel } from "discord.js";
+
+/*
+ * ボイスチャンネルにユーザーが参加したかどうかを取得する関数
+ * @param oldState 以前のボイスステート
+ * @param newState 新しいボイスステート
+ * @param voice_channel_id ボイスチャンネルの ID
+ * @returns {boolean} ユーザーがボイスチャンネルに参加したかどうか
+ */
+function getEnterVCStatus(
+  oldState: VoiceState,
+  newState: VoiceState,
+  voice_channel_id: string,
+): boolean {
+  return (
+    oldState.channelId !== voice_channel_id &&
+    newState.channelId === voice_channel_id &&
+    !newState.member?.user.bot
+  );
+}
+
+/**
+ * ボイスチャンネルからユーザーが退出したかどうかを取得する関数
+ * @param oldState 以前のボイスステート
+ * @param newState 新しいボイスステート
+ * @param voice_channel_id ボイスチャンネルの ID
+ * @returns {boolean} ユーザーがボイスチャンネルから退出したかどうか
+ */
+function getLeaveVCStatus(
+  oldState: VoiceState,
+  newState: VoiceState,
+  voice_channel_id: string,
+): boolean {
+  return (
+    oldState.channelId === voice_channel_id &&
+    newState.channelId !== voice_channel_id &&
+    !oldState.member?.user.bot
+  );
+}
 
 /*
  * ボイスチャンネルを取得する関数
@@ -27,4 +65,9 @@ function getVoiceChannelStatus(channel: VoiceBasedChannel): boolean {
   return members.size > 0;
 }
 
-export { getVoiceChannel, getVoiceChannelStatus };
+export {
+  getEnterVCStatus,
+  getLeaveVCStatus,
+  getVoiceChannel,
+  getVoiceChannelStatus,
+};
