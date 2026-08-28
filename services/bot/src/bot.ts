@@ -8,6 +8,7 @@ import {
 } from "./channel.js";
 import type { VoiceBasedChannel } from "discord.js";
 import { playAnnounce } from "./audio.js";
+import { AudioReceiver } from "./audio.js";
 
 const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
 
@@ -105,7 +106,9 @@ export default class Bot {
         console.error("ボイスチャンネルへの接続に失敗しました。");
         return;
       }
+      const audioReceiver = new AudioReceiver(connection);
       playAnnounce(connection);
+      await audioReceiver.startAudioReceiver();
     } else {
       this.connection?.disconnect();
     }
