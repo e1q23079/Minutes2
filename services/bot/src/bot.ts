@@ -1,4 +1,7 @@
 import { Client, GatewayIntentBits } from "discord.js";
+import Connection from "./connection.js";
+import { getVoiceChannel, getVoiceChannelStatus } from "./channel.js";
+import type { VoiceBasedChannel } from "discord.js";
 
 /**
  * Discord Bot を管理するクラス
@@ -7,6 +10,8 @@ export default class Bot {
   private api_key: string;
   private voice_channel_id: string;
   private client: Client;
+  private channel: VoiceBasedChannel | null = null;
+  private connection: Connection | null = null;
   /**
    * Discord Bot を初期化する
    * @param api_key Discord Bot の API キー
@@ -31,6 +36,28 @@ export default class Bot {
 
     this.client.once("clientReady", () => {
       console.log("Discord Bot が起動しました。");
+      this.channel = getVoiceChannel(this.client, this.voice_channel_id);
+      if (this.channel === null) {
+        throw new Error(
+          "指定されたチャンネルが見つからないか、ボイスチャンネルではありません。",
+        );
+      }
+      this.connection = new Connection(this.channel);
+    });
+
+    this.client.on("voiceStateUpdate", (oldState, newState) => {
+      if (
+        newState.channelId === this.voice_channel_id &&
+        getVoiceChannelStatus(newState.channel!)
+      ) {
+        this.connection?.connect();
+      } else if (
+        oldState.channelId === this.voice_channel_id &&
+        !getVoiceChannelStatus(oldState.channel!)
+      ) {
+        console.log("ボイスチャンネルから切断されました。");
+        this.connection?.disconnect();
+      }
     });
 
     await this.client.login(this.api_key);
