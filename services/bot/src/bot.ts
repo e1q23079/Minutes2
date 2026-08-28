@@ -28,7 +28,7 @@ export default class Bot {
     this.client.on("error", (error) => {
       console.error("Discord Bot でエラーが発生しました:", error);
     });
-    
+
     this.client.once("clientReady", () => {
       console.log("Discord Bot が起動しました。");
     });
