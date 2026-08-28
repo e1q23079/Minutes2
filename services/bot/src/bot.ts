@@ -63,11 +63,9 @@ export default class Bot {
         console.log(
           "ボイスチャンネルにユーザーが参加しました。接続を開始します。",
         );
-        this.botStatus = true;
         // 1分後にボットを接続する
-        this.processTimer = setTimeout(() => {
-          this.VCProcess();
-        }, VC_WAIT_TIME * 1000);
+        this.botStatus = true;
+        this.setProcessTimer();
       } else if (
         getLeaveVCStatus(oldState, newState, this.voice_channel_id) &&
         getVoiceChannelStatus(oldState.channel!) === "empty"
@@ -75,11 +73,9 @@ export default class Bot {
         console.log(
           "ボイスチャンネルからユーザーが退出しました。接続を切断します。",
         );
-        this.botStatus = false;
         //１分後にボットを切断する
-        this.processTimer = setTimeout(() => {
-          this.VCProcess();
-        }, VC_WAIT_TIME * 1000);
+        this.botStatus = false;
+        this.setProcessTimer();
       }
     });
 
@@ -93,6 +89,7 @@ export default class Bot {
   public async stop(): Promise<void> {
     if (this.processTimer) {
       clearTimeout(this.processTimer);
+      this.processTimer = null;
     }
     await this.client.destroy();
   }
@@ -102,15 +99,38 @@ export default class Bot {
    * @returns {void}
    */
   public async VCProcess(): Promise<void> {
-    if (!this.botStatus) {
-      this.connection?.disconnect();
-    } else {
+    if (this.botStatus) {
       const connection = this.connection?.connect();
       if (!connection) {
         console.error("ボイスチャンネルへの接続に失敗しました。");
         return;
       }
       playAnnounce(connection);
+    } else {
+      this.connection?.disconnect();
     }
+  }
+
+  /**
+   * * タイマーをクリアする関数
+   * @returns {void}
+   */
+  private clearProcessTimer(): void {
+    if (this.processTimer) {
+      clearTimeout(this.processTimer);
+      this.processTimer = null;
+    }
+  }
+
+  /**
+   * * タイマーをセットする関数
+   * @returns {void}
+   */
+  private setProcessTimer(): void {
+    this.clearProcessTimer();
+    this.processTimer = setTimeout(() => {
+      this.processTimer = null;
+      this.VCProcess();
+    }, VC_WAIT_TIME * 1000);
   }
 }

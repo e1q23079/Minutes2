@@ -13,11 +13,11 @@ export default class Connection {
   }
   /*
    * ボイスチャンネルに接続する関数
-   * @returns {VoiceConnection | null} 接続に成功した場合は VoiceConnection を返し、失敗した場合は null を返す
+   * @returns {VoiceConnection | null} 接続情報を返す。接続に失敗した場合は null を返す
    */
   public connect(): VoiceConnection | null {
     if (this.connection) {
-      return null;
+      return this.connection;
     }
     this.connection = joinVoiceChannel({
       channelId: this.channel.id,
