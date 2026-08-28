@@ -1,5 +1,5 @@
 import "dotenv/config";
-import Bot from "./bot";
+import Bot from "./bot.js";
 
 const API_KEY = process.env.API_KEY;
 if (!API_KEY) {
