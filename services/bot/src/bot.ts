@@ -119,7 +119,9 @@ export default class Bot {
         }
         this.audioReceiver = new AudioReceiver(connection);
         this.connection?.playAnnounce();
-        await this.audioReceiver.start();
+        setTimeout(async () => {
+          await this.audioReceiver?.start();
+        }, 10000); // 10秒後に音声受信を開始する
       } else {
         await this.audioReceiver?.stop();
         this.audioReceiver = null;
