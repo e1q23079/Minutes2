@@ -9,6 +9,7 @@ import {
 import type { VoiceBasedChannel } from "discord.js";
 import { playAnnounce } from "./audio.js";
 import { AudioReceiver } from "./audio.js";
+import Transcriber from "./transcriber.js";
 
 const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
 
@@ -42,6 +43,7 @@ export default class Bot {
    * @returns Promise<void>
    */
   public async start(): Promise<void> {
+    Transcriber.initialize(); // Transcriber の初期化を行う
     this.client.on("error", (error) => {
       console.error("Discord Bot でエラーが発生しました:", error);
     });

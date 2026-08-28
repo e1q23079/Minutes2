@@ -47,7 +47,6 @@ class AudioReceiver {
   private AUDIO_RECOGNITION_INTERVAL = 5; // 5秒ごとに音声認識
   private userAudioChunks = new Map<string, Buffer[]>(); // ユーザーごとの音声データを格納するマップ
   private activeUserStreams = new Map<string, AudioReceiveStream>(); // ユーザーごとの音声ストリームのタイマーを格納するマップ
-  private transcriber: Transcriber;
   private isTranscribing = false; // 文字起こし中かどうかのフラグ
   /*
    * 音声受信を開始する関数
@@ -55,14 +54,12 @@ class AudioReceiver {
    */
   constructor(connection: VoiceConnection) {
     this.connection = connection;
-    this.transcriber = new Transcriber();
   }
   /*
    * 音声受信を開始する関数
    * @returns {Promise<void>}
    */
   public async startAudioReceiver(): Promise<void> {
-    await this.transcriber.initialize();
     const receiver = this.connection.receiver;
     receiver.speaking.on("start", (userId) => {
       if (this.activeUserStreams.has(userId)) {
@@ -165,7 +162,7 @@ class AudioReceiver {
       combinedSamples.set(resampled);
       combinedSamples.set(paddingSamples, resampled.length);
       // Whisper で文字起こし
-      const text = await this.transcriber.transcribe(
+      const text = await Transcriber.transcribe(
         combinedSamples,
         this.TARGET_SAMPLE_RATE,
       );
