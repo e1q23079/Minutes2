@@ -22,6 +22,8 @@ export default class Connection {
       channelId: this.channel.id,
       guildId: this.channel.guild.id,
       adapterCreator: this.channel.guild.voiceAdapterCreator,
+      selfDeaf: false,
+      selfMute: true, // 自分の音声をミュートにする
     });
   }
   /*

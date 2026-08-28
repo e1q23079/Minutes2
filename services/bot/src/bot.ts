@@ -50,12 +50,17 @@ export default class Bot {
         newState.channelId === this.voice_channel_id &&
         getVoiceChannelStatus(newState.channel!)
       ) {
+        console.log(
+          "ボイスチャンネルにユーザーが参加しました。接続を開始します。",
+        );
         this.connection?.connect();
       } else if (
         oldState.channelId === this.voice_channel_id &&
         !getVoiceChannelStatus(oldState.channel!)
       ) {
-        console.log("ボイスチャンネルから切断されました。");
+        console.log(
+          "ボイスチャンネルからユーザーが退出しました。接続を切断します。",
+        );
         this.connection?.disconnect();
       }
     });
