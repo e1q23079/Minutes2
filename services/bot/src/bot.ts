@@ -25,6 +25,7 @@ export default class Bot {
   private botPrevStatus: boolean = false; // ボットの前回の接続状態を管理するフラグ
   private botStatus: boolean = false; // ボットの接続状態を管理するフラグ
   private processTimer: NodeJS.Timeout | null = null; // タイマーを管理する変数
+  private isProcessing: boolean = false; // ボイスチャンネルでの処理中かどうかを管理するフラグ
   /**
    * Discord Bot を初期化する
    * @param api_key Discord Bot の API キー
@@ -69,7 +70,6 @@ export default class Bot {
         );
         // 1分後にボットを接続する
         this.botStatus = true;
-        this.botPrevStatus = false;
         this.setProcessTimer();
       } else if (
         getLeaveVCStatus(oldState, newState, this.voice_channel_id) &&
@@ -80,7 +80,6 @@ export default class Bot {
         );
         //１分後にボットを切断する
         this.botStatus = false;
-        this.botPrevStatus = true;
         this.setProcessTimer();
       }
     });
@@ -104,22 +103,30 @@ export default class Bot {
    * ボイスチャンネルでの処理
    * @returns {void}
    */
-  public async VCProcess(): Promise<void> {
+  private async VCProcess(): Promise<void> {
     // ボットの接続状態が変化していない場合は処理をスキップする
-    if (this.botPrevStatus === this.botStatus) {
+    if (this.botPrevStatus === this.botStatus || this.isProcessing) {
       return;
     }
-    if (this.botStatus) {
-      const connection = this.connection?.connect();
-      if (!connection) {
-        console.error("ボイスチャンネルへの接続に失敗しました。");
-        return;
+    this.isProcessing = true;
+    this.botPrevStatus = this.botStatus;
+    try {
+      if (this.botStatus) {
+        const connection = this.connection?.connect();
+        if (!connection) {
+          console.error("ボイスチャンネルへの接続に失敗しました。");
+          return;
+        }
+        const audioReceiver = new AudioReceiver(connection);
+        playAnnounce(connection);
+        await audioReceiver.startAudioReceiver();
+      } else {
+        this.connection?.disconnect();
       }
-      const audioReceiver = new AudioReceiver(connection);
-      playAnnounce(connection);
-      await audioReceiver.startAudioReceiver();
-    } else {
-      this.connection?.disconnect();
+    } catch (error) {
+      console.error("ボイスチャンネルでの処理中にエラーが発生しました:", error);
+    } finally {
+      this.isProcessing = false;
     }
   }
 
