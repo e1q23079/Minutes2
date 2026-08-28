@@ -9,6 +9,7 @@
       "version": "24"
     }
   },
+  "postCreateCommand": "cd services/ts/bot && npm install",
   "customizations": {
     "vscode": {
       "extensions": [
