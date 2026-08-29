@@ -27,6 +27,7 @@ export default class Bot {
   private processTimer: NodeJS.Timeout | null = null; // タイマーを管理する変数
   private isProcessing: boolean = false; // ボイスチャンネルでの処理中かどうかを管理するフラグ
   private audioReceiver: AudioReceiver | null = null; // AudioReceiverのインスタンスを保持する変数
+  private isDestroyed: boolean = false;
   /**
    * Discord Bot を初期化する
    * @param api_key Discord Bot の API キー
@@ -83,15 +84,36 @@ export default class Bot {
    * @returns Promise<void>
    */
   public async stop(): Promise<void> {
-    if (this.processTimer) {
-      clearTimeout(this.processTimer);
-      this.processTimer = null;
+    this.isDestroyed = true;
+    this.clearProcessTimer();
+    if (this.audioReceiver) {
+      try {
+        await this.audioReceiver.stop();
+      } catch (error) {
+        console.error("AudioReceiver の停止中にエラーが発生しました:", error);
+      }
+      this.audioReceiver = null;
     }
+    if (this.connection) {
+      try {
+        this.connection.disconnect();
+      } catch (error) {
+        console.error("Connection の切断中にエラーが発生しました:", error);
+      }
+      this.connection = null;
+    }
+    this.client.removeAllListeners();
     await this.client.destroy();
   }
 
   private setupEventListeners(): void {
+    if (this.isDestroyed) {
+      return;
+    }
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
+      if (this.isDestroyed) {
+        return;
+      }
       if (
         getEnterVCStatus(oldState, newState, this.voice_channel_id) &&
         getVoiceChannelStatus(newState.channel!) === "one"
@@ -121,6 +143,9 @@ export default class Bot {
    * @returns {void}
    */
   private async VCProcess(): Promise<void> {
+    if (this.isDestroyed) {
+      return;
+    }
     // ボットの接続状態が変化していない場合は処理をスキップする
     if (this.botPrevStatus === this.botStatus || this.isProcessing) {
       return;
@@ -134,9 +159,20 @@ export default class Bot {
           return;
         }
         this.botPrevStatus = this.botStatus;
+        if (this.audioReceiver) {
+          await this.audioReceiver.stop().catch((error) => {
+            console.error(
+              "AudioReceiver の停止中にエラーが発生しました:",
+              error,
+            );
+          });
+          this.audioReceiver = null;
+        }
         this.audioReceiver = new AudioReceiver(connection);
         await this.connection?.playAnnounce();
-        await this.audioReceiver?.start();
+        if (!this.isDestroyed) {
+          await this.audioReceiver?.start();
+        }
       } else {
         this.botPrevStatus = this.botStatus;
         await this.audioReceiver?.stop();
@@ -147,6 +183,9 @@ export default class Bot {
       console.error("ボイスチャンネルでの処理中にエラーが発生しました:", error);
     } finally {
       this.isProcessing = false;
+      if (!this.isDestroyed && this.botPrevStatus !== this.botStatus) {
+        this.setProcessTimer();
+      }
     }
   }
 
@@ -167,6 +206,9 @@ export default class Bot {
    */
   private setProcessTimer(): void {
     this.clearProcessTimer();
+    if (this.isDestroyed) {
+      return;
+    }
     this.processTimer = setTimeout(() => {
       this.processTimer = null;
       this.VCProcess();
