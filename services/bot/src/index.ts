@@ -25,10 +25,24 @@ async function main() {
 
   process.on("SIGINT", () => {
     shutdown().catch(() => {
-      process.exit(1);
+      process.exit(0);
     });
   });
   process.on("SIGTERM", () => {
+    shutdown().catch(() => {
+      process.exit(0);
+    });
+  });
+
+  process.on("uncaughtException", (error) => {
+    console.error("未処理の例外が発生しました:", error);
+    shutdown().catch(() => {
+      process.exit(1);
+    });
+  });
+
+  process.on("unhandledRejection", (reason) => {
+    console.error("未処理の Promise 拒否が発生しました:", reason);
     shutdown().catch(() => {
       process.exit(1);
     });
