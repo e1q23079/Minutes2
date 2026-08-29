@@ -153,7 +153,7 @@ export default class Bot {
     this.isProcessing = true;
     try {
       if (this.botStatus) {
-        const connection = this.connection?.connect();
+        const connection = await this.connection?.connect();
         if (!connection) {
           console.error("ボイスチャンネルへの接続に失敗しました。");
           return;

@@ -25,30 +25,63 @@ export default class Connection {
    * ボイスチャンネルに接続する関数
    * @returns {VoiceConnection | null} 接続情報を返す。接続に失敗した場合は null を返す
    */
-  public connect(): VoiceConnection | null {
+  public async connect(): Promise<VoiceConnection | null> {
     if (this.connection) {
       return this.connection;
     }
-    this.connection = joinVoiceChannel({
-      channelId: this.channel.id,
-      guildId: this.channel.guild.id,
-      adapterCreator: this.channel.guild.voiceAdapterCreator,
-      selfDeaf: false,
-      selfMute: false,
-    });
-    return this.connection;
+    try {
+      this.connection = joinVoiceChannel({
+        channelId: this.channel.id,
+        guildId: this.channel.guild.id,
+        adapterCreator: this.channel.guild.voiceAdapterCreator,
+        selfDeaf: false,
+        selfMute: false,
+      });
+      await entersState(this.connection, VoiceConnectionStatus.Ready, 30_000);
+      this.connection.on(VoiceConnectionStatus.Disconnected, async () => {
+        try {
+          await Promise.race([
+            entersState(
+              this.connection!,
+              VoiceConnectionStatus.Signalling,
+              5_000,
+            ),
+            entersState(
+              this.connection!,
+              VoiceConnectionStatus.Connecting,
+              5_000,
+            ),
+          ]);
+        } catch (error) {
+          console.error("ボイスチャンネルへの再接続に失敗しました:", error);
+          this.disconnect();
+        }
+      });
+      console.log(`ボイスチャンネルに接続しました。`);
+      return this.connection;
+    } catch (error) {
+      console.error("ボイスチャンネルへの接続に失敗しました:", error);
+      this.disconnect();
+      return null;
+    }
   }
   /*
    * ボイスチャンネルから切断する関数
    */
   public disconnect(): void {
-    this.player?.stop(true);
-    this.player = null;
-    if (!this.connection) {
-      return;
+    if (this.player) {
+      this.player?.stop(true);
+      this.player.removeAllListeners();
+      this.player = null;
     }
-    this.connection.destroy();
-    this.connection = null;
+    if (this.connection) {
+      this.connection.removeAllListeners();
+      if (this.connection.state.status !== VoiceConnectionStatus.Destroyed) {
+        this.connection.destroy();
+      }
+      this.connection = null;
+    }
+    console.log(`ボイスチャンネルから切断しました。`);
   }
 
   /*
@@ -56,7 +89,10 @@ export default class Connection {
    * @returns {boolean} ボイスチャンネルに接続している場合は true を返し、接続していない場合は false を返す
    */
   public getConnectionStatus(): boolean {
-    return this.connection !== null;
+    return (
+      this.connection !== null &&
+      this.connection.state.status !== VoiceConnectionStatus.Destroyed
+    );
   }
 
   /*
@@ -88,6 +124,7 @@ export default class Connection {
       await entersState(this.player, AudioPlayerStatus.Idle, 30_000);
       console.log("音声再生が完了しました。");
     } catch (error) {
+      this.player?.stop(true);
       console.error("音声再生中にエラーが発生しました:", error);
       throw error;
     }
