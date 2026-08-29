@@ -4,6 +4,9 @@ import {
   createAudioResource,
   VoiceConnection,
   joinVoiceChannel,
+  AudioPlayerStatus,
+  VoiceConnectionStatus,
+  entersState,
 } from "@discordjs/voice";
 import type { VoiceBasedChannel } from "discord.js";
 
@@ -39,7 +42,7 @@ export default class Connection {
    * ボイスチャンネルから切断する関数
    */
   public disconnect(): void {
-    this.player?.stop();
+    this.player?.stop(true);
     this.player = null;
     if (!this.connection) {
       return;
@@ -56,19 +59,37 @@ export default class Connection {
     return this.connection !== null;
   }
 
-  public playAnnounce(): void {
+  /*
+   * ボイスチャンネルで音声を再生する関数
+   * @returns {Promise<void>} 音声再生が完了するまで待機する Promise を返す
+   */
+  public async playAnnounce(): Promise<void> {
     if (!this.connection) {
       return;
     }
+
+    await entersState(this.connection, VoiceConnectionStatus.Ready, 30_000);
+
     if (!this.player) {
       this.player = createAudioPlayer();
-      this.player.on("error", (error) => {
-        console.error("音声再生中にエラーが発生しました:", error);
-      });
       this.connection.subscribe(this.player);
+    } else {
+      this.player.stop(true);
     }
+
     const resource = createAudioResource("./announce.wav");
-    console.log("音声再生を開始しました。");
     this.player.play(resource);
+
+    try {
+      if (this.player.state.status !== AudioPlayerStatus.Playing) {
+        await entersState(this.player, AudioPlayerStatus.Playing, 5_000);
+      }
+      console.log("音声再生が開始されました。");
+      await entersState(this.player, AudioPlayerStatus.Idle, 30_000);
+      console.log("音声再生が完了しました。");
+    } catch (error) {
+      console.error("音声再生中にエラーが発生しました:", error);
+      throw error;
+    }
   }
 }

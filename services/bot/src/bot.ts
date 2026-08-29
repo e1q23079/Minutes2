@@ -21,6 +21,7 @@ export default class Bot {
   private client: Client;
   private channel: VoiceBasedChannel | null = null;
   private connection: Connection | null = null;
+
   private botPrevStatus: boolean = false; // ボットの前回の接続状態を管理するフラグ
   private botStatus: boolean = false; // ボットの接続状態を管理するフラグ
   private processTimer: NodeJS.Timeout | null = null; // タイマーを管理する変数
@@ -49,17 +50,46 @@ export default class Bot {
       console.error("Discord Bot でエラーが発生しました:", error);
     });
 
-    this.client.once("clientReady", () => {
-      console.log("Discord Bot が起動しました。");
-      this.channel = getVoiceChannel(this.client, this.voice_channel_id);
-      if (this.channel === null) {
-        throw new Error(
-          "指定されたチャンネルが見つからないか、ボイスチャンネルではありません。",
-        );
-      }
-      this.connection = new Connection(this.channel);
+    const readyPromise = new Promise<void>((resolve, reject) => {
+      this.client.once("clientReady", () => {
+        try {
+          console.log("Discord Bot が起動しました。");
+          this.channel = getVoiceChannel(this.client, this.voice_channel_id);
+          if (this.channel === null) {
+            reject(
+              new Error(
+                "指定されたチャンネルが見つからないか、ボイスチャンネルではありません。",
+              ),
+            );
+            return;
+          }
+          this.connection = new Connection(this.channel);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
     });
 
+    this.setupEventListeners();
+
+    await this.client.login(this.api_key);
+    await readyPromise;
+  }
+
+  /**
+   * Discord Bot を停止する
+   * @returns Promise<void>
+   */
+  public async stop(): Promise<void> {
+    if (this.processTimer) {
+      clearTimeout(this.processTimer);
+      this.processTimer = null;
+    }
+    await this.client.destroy();
+  }
+
+  private async setupEventListeners(): Promise<void> {
     this.client.on("voiceStateUpdate", (oldState, newState) => {
       if (
         getEnterVCStatus(oldState, newState, this.voice_channel_id) &&
@@ -83,20 +113,6 @@ export default class Bot {
         this.setProcessTimer();
       }
     });
-
-    await this.client.login(this.api_key);
-  }
-
-  /**
-   * Discord Bot を停止する
-   * @returns Promise<void>
-   */
-  public async stop(): Promise<void> {
-    if (this.processTimer) {
-      clearTimeout(this.processTimer);
-      this.processTimer = null;
-    }
-    await this.client.destroy();
   }
 
   /**
@@ -118,10 +134,8 @@ export default class Bot {
           return;
         }
         this.audioReceiver = new AudioReceiver(connection);
-        this.connection?.playAnnounce();
-        setTimeout(async () => {
-          await this.audioReceiver?.start();
-        }, 10000); // 10秒後に音声受信を開始する
+        await this.connection?.playAnnounce();
+        await this.audioReceiver?.start();
       } else {
         await this.audioReceiver?.stop();
         this.audioReceiver = null;
