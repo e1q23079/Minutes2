@@ -46,6 +46,7 @@ export default class Bot {
    */
   public async start(): Promise<void> {
     Transcriber.initialize(); // Transcriber の初期化を行う
+
     this.client.on(Events.Error, (error) => {
       console.error("Discord Bot でエラーが発生しました:", error);
     });
@@ -71,10 +72,10 @@ export default class Bot {
       });
     });
 
-    this.setupEventListeners();
-
     await this.client.login(this.api_key);
     await readyPromise;
+
+    this.setupEventListeners();
   }
 
   /**
@@ -89,7 +90,7 @@ export default class Bot {
     await this.client.destroy();
   }
 
-  private async setupEventListeners(): Promise<void> {
+  private setupEventListeners(): void {
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
       if (
         getEnterVCStatus(oldState, newState, this.voice_channel_id) &&
@@ -125,7 +126,6 @@ export default class Bot {
       return;
     }
     this.isProcessing = true;
-    this.botPrevStatus = this.botStatus;
     try {
       if (this.botStatus) {
         const connection = this.connection?.connect();
@@ -133,10 +133,12 @@ export default class Bot {
           console.error("ボイスチャンネルへの接続に失敗しました。");
           return;
         }
+        this.botPrevStatus = this.botStatus;
         this.audioReceiver = new AudioReceiver(connection);
         await this.connection?.playAnnounce();
         await this.audioReceiver?.start();
       } else {
+        this.botPrevStatus = this.botStatus;
         await this.audioReceiver?.stop();
         this.audioReceiver = null;
         this.connection?.disconnect();
