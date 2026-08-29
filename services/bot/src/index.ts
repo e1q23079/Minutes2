@@ -1,23 +1,19 @@
-import "dotenv/config";
 import Bot from "./bot.js";
+import { loadConfig } from "./config.js";
 
-const API_KEY = process.env.API_KEY;
-if (!API_KEY) {
-  throw new Error("APIキーが環境変数に定義されていません。");
-}
+async function main() {
+  const config = loadConfig();
+  const bot = new Bot(config.apiKey, config.voiceChannelId);
 
-const VOICE_CHANNEL_ID = process.env.VOICE_CHANNEL_ID;
-if (!VOICE_CHANNEL_ID) {
-  throw new Error("VOICE_CHANNEL_IDが環境変数に定義されていません。");
-}
+  let isShuttingDown = false;
 
-const bot = new Bot(API_KEY, VOICE_CHANNEL_ID);
-
-try {
-  await bot.start();
   const shutdown = async () => {
+    if (isShuttingDown) {
+      return;
+    }
+    isShuttingDown = true;
+    console.log("Discord Bot を停止します。");
     try {
-      console.log("Discord Bot を停止します。");
       await bot.stop();
       console.log("Discord Bot が正常に停止しました。");
       process.exit(0);
@@ -26,9 +22,22 @@ try {
       process.exit(1);
     }
   };
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
-} catch (error: unknown) {
+
+  process.on("SIGINT", () => {
+    shutdown().catch(() => {
+      process.exit(1);
+    });
+  });
+  process.on("SIGTERM", () => {
+    shutdown().catch(() => {
+      process.exit(1);
+    });
+  });
+
+  await bot.start();
+}
+
+main().catch((error) => {
   console.error("Discord Bot の起動中にエラーが発生しました:", error);
   process.exit(1);
-}
+});

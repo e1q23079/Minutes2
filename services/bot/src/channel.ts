@@ -60,7 +60,9 @@ function getVoiceChannel(
  * @param channel ボイスチャンネル
  * @returns {"empty" | "one" | "many"} ボイスチャンネルの状況
  */
-function getVoiceChannelStatus(channel: VoiceBasedChannel): "empty" | "one" | "many" {
+function getVoiceChannelStatus(
+  channel: VoiceBasedChannel,
+): "empty" | "one" | "many" {
   const members = channel.members.filter((member) => !member.user.bot);
   const num = members.size;
   if (num === 0) {
