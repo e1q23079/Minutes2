@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Events } from "discord.js";
 import Connection from "./connection.js";
 import {
   getEnterVCStatus,
@@ -46,12 +46,12 @@ export default class Bot {
    */
   public async start(): Promise<void> {
     Transcriber.initialize(); // Transcriber の初期化を行う
-    this.client.on("error", (error) => {
+    this.client.on(Events.Error, (error) => {
       console.error("Discord Bot でエラーが発生しました:", error);
     });
 
     const readyPromise = new Promise<void>((resolve, reject) => {
-      this.client.once("clientReady", () => {
+      this.client.once(Events.ClientReady, () => {
         try {
           console.log("Discord Bot が起動しました。");
           this.channel = getVoiceChannel(this.client, this.voice_channel_id);
@@ -90,7 +90,7 @@ export default class Bot {
   }
 
   private async setupEventListeners(): Promise<void> {
-    this.client.on("voiceStateUpdate", (oldState, newState) => {
+    this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
       if (
         getEnterVCStatus(oldState, newState, this.voice_channel_id) &&
         getVoiceChannelStatus(newState.channel!) === "one"
