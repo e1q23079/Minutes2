@@ -134,7 +134,7 @@ class AudioReceiver {
       for (let i = 0; i < samples.length; i++) {
         samples[i] = audioBuffer.readInt16LE(i * 2) / 32768;
       }
-      // Streo から Mono に変換
+      // Stereo から Mono に変換
       const mono = new Float32Array(samples.length / 2);
       for (let i = 0; i < mono.length; i++) {
         mono[i] = (samples[i * 2]! + samples[i * 2 + 1]!) / 2;
