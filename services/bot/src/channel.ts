@@ -48,11 +48,16 @@ function getVoiceChannel(
   client: Client,
   channelId: string,
 ): VoiceBasedChannel | null {
-  const channel = client.channels.cache.get(channelId);
-  if (!channel || !channel.isVoiceBased()) {
+  try {
+    const channel = client.channels.cache.get(channelId);
+    if (!channel || !channel.isVoiceBased()) {
+      return null;
+    }
+    return channel;
+  } catch (error) {
+    console.error("ボイスチャンネルの取得中にエラーが発生しました:", error);
     return null;
   }
-  return channel;
 }
 
 /*
