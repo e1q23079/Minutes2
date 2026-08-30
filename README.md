@@ -8,6 +8,7 @@ Voxnote は、Discord のボイスチャンネルで行われる会議や雑談�
 - ボイスチャンネルへの参加・退出を自動検知
 - 音声を文字起こししてテキスト化
 - 文字起こし結果を `.txt` ファイルとして保存
+- 議事録内容を Webhook で外部サービスに通知
 - Docker とローカル開発の両方で起動可能
 
 ## 技術スタック
@@ -22,11 +23,15 @@ Voxnote は、Discord のボイスチャンネルで行われる会議や雑談�
 
 - Node.js 20 以上
 - npm
+- Python 3.9 以上（Controller 用）
 - Discord Bot の API トークン
 - 対象の Discord ボイスチャンネル ID
+- Webhook URL（議事録送信先）
 - Docker / Docker Compose（コンテナ利用時）
 
 ## 環境変数設定
+
+### Bot の環境変数
 
 開発環境では `services/bot/.env` を作成して、次の値を設定してください。
 
@@ -38,7 +43,19 @@ VOICE_CHANNEL_ID=<YOUR_VOICE_CHANNEL_ID>
 - `API_KEY`: Discord Bot のトークン
 - `VOICE_CHANNEL_ID`: 監視対象のボイスチャンネル ID
 
+### Controller の環境変数
+
+開発環境では `services/controller/.env` を作成して、次の値を設定してください。
+
+```env
+WEBHOOK_URL=<YOUR_WEBHOOK_URL>
+```
+
+- `WEBHOOK_URL`: 議事録を送信する Webhook の URL（例：Slack, Discord, カスタムサーバー）
+
 ## ローカル開発での起動
+
+### 1. Bot の起動
 
 ```bash
 cd services/bot
@@ -46,15 +63,30 @@ npm install
 npm run dev
 ```
 
-Bot を起動した後、指定したボイスチャンネルにユーザーが参加すると自動的に接続し、会話を文字起こしします。
+### 2. Controller の起動
+
+Bot の起動後、別のターミナルで Controller を起動します。
+
+```bash
+cd services/controller
+python3 -m venv venv
+source venv/bin/activate  # Windows では: venv\Scripts\activate
+pip install -r requirements.txt
+python3 main.py
+```
+
+Bot を起動した後、指定したボイスチャンネルにユーザーが参加すると自動的に接続し、会話を文字起こしします。Controller が起動中であれば、文字起こし結果は自動的に Webhook 経由で送信されます。
 
 ## Docker での起動
 
-Docker で起動する前に、`services/bot/.env` に必要な環境変数を設定してください。
+Docker で起動する前に、環境変数をそれぞれ設定してください。
+
+`/.env`:
 
 ```env
 API_KEY=<YOUR_DISCORD_BOT_TOKEN>
 VOICE_CHANNEL_ID=<YOUR_VOICE_CHANNEL_ID>
+WEBHOOK_URL=<YOUR_WEBHOOK_URL>
 ```
 
 ```bash
@@ -82,9 +114,11 @@ services/bot/data/transcription_YYYY-MM-DD_HH-MM-SS.txt
 
 1. Discord Bot を作成し、対象サーバーに招待する
 2. 対象のボイスチャンネル ID を `VOICE_CHANNEL_ID` に設定する
-3. アプリを起動する
-4. 会話中のチャンネルにユーザーが参加すると文字起こしが開始される
-5. 会話終了時にテキストログがファイルに保存される
+3. Webhook URL を用意する（Slack, Discord, または独自サーバー）
+4. Bot と Controller をそれぞれ起動する
+5. 会話中のチャンネルにユーザーが参加すると文字起こしが開始される
+6. 会話終了時にテキストログがファイルに保存される
+7. Controller が自動的に文字起こし結果を Webhook 経由で送信する
 
 ## 注意事項
 
