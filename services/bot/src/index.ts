@@ -1,4 +1,4 @@
-import Bot from "./bot.js";
+import Bot from "./modules/bot.js";
 import { loadConfig } from "./config.js";
 import { logger } from "./logger.js";
 
