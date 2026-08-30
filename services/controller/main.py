@@ -25,9 +25,7 @@ def main():
     try:
         data = Data(Path(FILE_PATH))
         if not WEBHOOK_URL:
-            raise ValueError(
-                "Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。"
-            )
+            raise ValueError("Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。")
         notification = Notification(WEBHOOK_URL)
         process = Process(data, notification, interval=INTERVAL)
 

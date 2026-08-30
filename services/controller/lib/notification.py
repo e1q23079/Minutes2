@@ -28,7 +28,5 @@ class Notification:
         response = requests.post(self.webhook_url, json=data)
 
         if response.status_code != 204:
-            raise Exception(
-                f"通知の送信に失敗しました。ステータスコード: {response.status_code}, レスポンス: {response.text}"
-            )
+            raise Exception(f"通知の送信に失敗しました。ステータスコード: {response.status_code}, レスポンス: {response.text}")
         logger.info("通知が正常に送信されました。")
