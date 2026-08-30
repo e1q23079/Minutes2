@@ -2,18 +2,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { logger } from "../logger.js";
 
+const DATA_DIR =
+  process.env.DATA_DIR ?? path.resolve(process.cwd(), "..", "data");
+
 export default class Writer {
   /*
    * ログファイルに文字起こし結果を書き込むクラス
    */
   private logFilePath: string;
   constructor(fileName: string) {
-    this.logFilePath = path.resolve(
-      process.cwd(),
-      "..",
-      "data",
-      `transcription_${fileName}.txt`,
-    );
+    this.logFilePath = path.join(DATA_DIR, `transcription_${fileName}.txt`);
   }
   /*
    * * 文字起こし結果をログファイルに書き込む関数

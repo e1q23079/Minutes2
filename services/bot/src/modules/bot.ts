@@ -50,7 +50,7 @@ export default class Bot {
    * @returns Promise<void>
    */
   public async start(): Promise<void> {
-    Transcriber.initialize(); // Transcriber の初期化を行う
+    await Transcriber.initialize(); // Transcriber の初期化を行う
 
     this.client.on(Events.Error, (error) => {
       logger.error("Discord Bot でエラーが発生しました:", error);
