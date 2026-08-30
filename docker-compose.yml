@@ -1,0 +1,11 @@
+services:
+  bot:
+    build:
+      context: ./services/bot
+      dockerfile: Dockerfile
+    container_name: voxnote-bot
+    environment:
+      - API_KEY=${API_KEY}
+      - VOICE_CHANNEL_ID=${VOICE_CHANNEL_ID}
+    volumes:
+      - ./services/bot/data:/data
