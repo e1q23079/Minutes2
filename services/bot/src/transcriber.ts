@@ -4,18 +4,37 @@ import {
 } from "@huggingface/transformers";
 
 let transcriber: AutomaticSpeechRecognitionPipeline | null = null;
+let initPromise: Promise<void> | null = null;
 
 /*
  * Whisperの初期化を行う関数
  */
-async function initialize() {
-  console.log("Whisperの初期化をしています...");
-  transcriber = await pipeline(
-    "automatic-speech-recognition",
-    "onnx-community/whisper-small",
-    { device: "cpu" },
-  );
-  console.log("Whisperの初期化が完了しました。");
+async function initialize(): Promise<void> {
+  if (transcriber) {
+    console.log("Whisperはすでに初期化されています。");
+    return;
+  }
+  if (initPromise) {
+    console.log("Whisperの初期化中です。完了を待っています...");
+    await initPromise;
+    return;
+  }
+  initPromise = (async () => {
+    try {
+      console.log("Whisperの初期化をしています...");
+      transcriber = await pipeline(
+        "automatic-speech-recognition",
+        "onnx-community/whisper-small",
+        { device: "cpu" },
+      );
+      console.log("Whisperの初期化が完了しました。");
+    } catch (error) {
+      console.error("Whisperの初期化中にエラーが発生しました:", error);
+      initPromise = null;
+      throw error;
+    }
+  })();
+  await initPromise;
 }
 
 /*
@@ -37,10 +56,16 @@ async function transcribe(
     sampling_rate: sampleRate,
     language: "ja",
     task: "transcribe",
-    chunk_length_s: 30,
-    stride_length_s: 5,
+    // chunk_length_s: 30,
+    // stride_length_s: 5,
   });
-  return result.text;
+  if (Array.isArray(result)) {
+    return result.map((r) => r.text).join(" ");
+  }
+  if (typeof result?.text === "string") {
+    return result.text;
+  }
+  throw new Error("文字起こし結果が不正です。");
 }
 
 export default { initialize, transcribe };
