@@ -67,6 +67,7 @@ export default class Connection {
   }
   /*
    * ボイスチャンネルから切断する関数
+   * @returns {void}
    */
   public disconnect(): void {
     if (this.player) {
