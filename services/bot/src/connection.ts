@@ -121,12 +121,12 @@ export default class Connection {
       if (this.player.state.status !== AudioPlayerStatus.Playing) {
         await entersState(this.player, AudioPlayerStatus.Playing, 5_000);
       }
-      console.log("音声再生が開始されました。");
+      console.log("アナウンス音声の再生が開始されました。");
       await entersState(this.player, AudioPlayerStatus.Idle, 30_000);
-      console.log("音声再生が完了しました。");
+      console.log("アナウンス音声の音声再生が完了しました。");
     } catch (error) {
       this.player?.stop(true);
-      console.error("音声再生中にエラーが発生しました:", error);
+      console.error("アナウンス音声の再生中にエラーが発生しました:", error);
       throw error;
     }
   }
