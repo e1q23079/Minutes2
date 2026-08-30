@@ -10,19 +10,26 @@ from lib.process import Process
 
 load_dotenv()
 
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+FILE_PATH = os.environ.get("DATA_PATH", "../data")
+
+INTERVAL = 10
+
 
 def main():
-    webhook_url = os.environ.get("WEBHOOK_URL")
-    file_path = os.environ.get("DATA_PATH", "../data")
-    if not webhook_url:
-        raise ValueError(
-            "Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。"
-        )
+    """
+    メイン関数。環境変数から設定を読み込み、データ処理と通知のプロセスを開始します。
+    """
+
     try:
         logger.info("管理プロセスを開始します。")
-        data = Data(Path(file_path))
-        notification = Notification(webhook_url)
-        process = Process(data, notification, interval=10)
+        data = Data(Path(FILE_PATH))
+        if not WEBHOOK_URL:
+            raise ValueError(
+                "Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。"
+            )
+        notification = Notification(WEBHOOK_URL)
+        process = Process(data, notification, interval=INTERVAL)
         process.start()
 
     except KeyboardInterrupt:
@@ -34,4 +41,7 @@ def main():
 
 
 if __name__ == "__main__":
+    """
+    スクリプトが直接実行された場合にメイン関数を呼び出します。
+    """
     main()
