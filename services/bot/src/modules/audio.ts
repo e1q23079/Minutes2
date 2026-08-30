@@ -144,10 +144,10 @@ class AudioReceiver {
     if (!this.isRunning) {
       return;
     }
-    this.transcribeTimer = setTimeout(
-      async () => this.transcribeAudioChunks(),
-      this.AUDIO_RECOGNITION_INTERVAL * 1000,
-    );
+    this.transcribeTimer = setTimeout(async () => {
+      await this.transcribeAudioChunks();
+      await this.loopTranscribeTerm();
+    }, this.AUDIO_RECOGNITION_INTERVAL * 1000);
   }
 
   /*
