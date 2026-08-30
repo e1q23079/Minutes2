@@ -63,8 +63,17 @@ class AudioReceiver {
           error,
         );
       });
-      pcmStream.on("end", async () => {
+      const cleanup = () => {
         this.activeUserStreams.delete(userId);
+        audioStream.unpipe(decoder);
+        audioStream.destroy();
+        decoder.destroy();
+      };
+      pcmStream.on("end", async () => {
+        cleanup();
+      });
+      pcmStream.on("close", async () => {
+        cleanup();
       });
     });
     this.loopTranscribeTerm();
@@ -80,10 +89,17 @@ class AudioReceiver {
       clearTimeout(this.transcribeTimer);
       this.transcribeTimer = null;
     }
+    for (const [userId, audioStream] of this.activeUserStreams.entries()) {
+      audioStream.destroy();
+      this.activeUserStreams.delete(userId);
+    }
     await this.transcribeAudioChunks();
   }
 
   private async loopTranscribeTerm(): Promise<void> {
+    if (!this.isRunning) {
+      return;
+    }
     this.transcribeTimer = setTimeout(
       async () => this.transcribeAudioChunks(),
       this.AUDIO_RECOGNITION_INTERVAL * 1000,
@@ -129,13 +145,20 @@ class AudioReceiver {
    */
   private async transcribePcm(audioBuffer: Buffer) {
     try {
+      // 16bit バウンダリチェック
+      const validBufferLength = audioBuffer.length - (audioBuffer.length % 2);
+      if (validBufferLength === 0) {
+        return null;
+      }
       // PCM 16bit から Float32Array に変換
-      const samples = new Float32Array(audioBuffer.length / 2);
+      const sampleCount = validBufferLength / 2;
+      const samples = new Float32Array(sampleCount);
       for (let i = 0; i < samples.length; i++) {
         samples[i] = audioBuffer.readInt16LE(i * 2) / 32768;
       }
       // Stereo から Mono に変換
-      const mono = new Float32Array(samples.length / 2);
+      const monoLength = Math.floor(samples.length / this.CHANNELS);
+      const mono = new Float32Array(monoLength);
       for (let i = 0; i < mono.length; i++) {
         mono[i] = (samples[i * 2]! + samples[i * 2 + 1]!) / 2;
       }
