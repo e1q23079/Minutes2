@@ -115,7 +115,7 @@ export default class Connection {
       this.player.stop(true);
     }
 
-    const resource = createAudioResource("./announce.wav");
+    const resource = createAudioResource("./assets/announce.wav");
     this.player.play(resource);
 
     try {
