@@ -4,6 +4,9 @@
     "dbaeumer.vscode-eslint",
     "redhat.vscode-yaml",
     "ms-azuretools.vscode-docker",
-    "DavidAnson.vscode-markdownlint"
+    "DavidAnson.vscode-markdownlint",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff"
   ]
 }

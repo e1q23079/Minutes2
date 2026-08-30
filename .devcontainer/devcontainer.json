@@ -7,9 +7,12 @@
   "features": {
     "ghcr.io/devcontainers/features/node": {
       "version": "24"
+    },
+    "ghcr.io/devcontainers/features/python": {
+      "version": "3.12"
     }
   },
-  "postCreateCommand": "cd services/bot && npm install",
+  "postCreateCommand": "cd services/bot && npm install && cd ../controller && pip install -r requirements.txt",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -17,7 +20,10 @@
         "dbaeumer.vscode-eslint",
         "redhat.vscode-yaml",
         "ms-azuretools.vscode-docker",
-        "DavidAnson.vscode-markdownlint"
+        "DavidAnson.vscode-markdownlint",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff"
       ]
     }
   }

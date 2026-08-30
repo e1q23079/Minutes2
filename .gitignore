@@ -11,3 +11,12 @@ dist/
 
 # transcriptoions
 transcription_*.txt
+
+# .venv
+.venv/
+
+# Ruff
+.ruff_cache/
+
+# Python
+__pycache__/
