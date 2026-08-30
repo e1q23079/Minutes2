@@ -1,4 +1,4 @@
-name: Bot CI
+name: Controller CI
 
 on:
   push:
