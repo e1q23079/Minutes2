@@ -10,7 +10,7 @@ on:
 
 defaults:
   run:
-    working-directory: ./service/bot
+    working-directory: ./services/bot
 
 jobs:
   lint:
