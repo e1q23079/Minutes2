@@ -14,7 +14,7 @@ load_dotenv()
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 FILE_PATH = os.environ.get("DATA_DIR", "../data")
 
-INTERVAL = 10
+INTERVAL = 60
 
 
 def main():
