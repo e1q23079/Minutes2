@@ -17,7 +17,7 @@ class AudioReceiver {
   private AUDIO_RECOGNITION_INTERVAL = 5; // 5秒ごとに音声認識
   private userAudioChunks = new Map<string, Buffer[]>(); // ユーザーごとの音声データを格納するマップ
   private activeUserStreams = new Map<string, AudioReceiveStream>(); // ユーザーごとの音声ストリームのタイマーを格納するマップ
-  private isTranscribing = false; // 文字起こし中かどうかのフラグ
+  private transcriptionPromise: Promise<void> | null = null; // 文字起こし中のPromiseを保持する変数
   private isRunning = false; // 音声受信中かどうかのフラグ
   private transcribeTimer: NodeJS.Timeout | null = null; // 文字起こしのタイマーを格納する変数
   private writer: Writer | null = null; // Writerのインスタンスを保持する変数
@@ -114,6 +114,7 @@ class AudioReceiver {
       clearTimeout(this.transcribeTimer);
       this.transcribeTimer = null;
     }
+    await this.transcribeAudioChunks();
     for (const [userId, audioStream] of this.activeUserStreams.entries()) {
       try {
         audioStream.destroy();
@@ -125,13 +126,12 @@ class AudioReceiver {
       }
       this.activeUserStreams.delete(userId);
     }
-    let waitCount = 0;
-    while (this.isTranscribing && waitCount < 10) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      waitCount++;
+
+    if (this.transcriptionPromise) {
+      await this.transcriptionPromise;
     }
-    await this.transcribeAudioChunks();
-    this.writer?.endLog().catch((error) => {
+
+    await this.writer?.endLog().catch((error) => {
       logger.error("Writer の endLog() 中にエラーが発生しました:", error);
     });
   }
@@ -155,13 +155,24 @@ class AudioReceiver {
    * @returns {Promise<void>}
    */
   private async transcribeAudioChunks(): Promise<void> {
-    if (this.isTranscribing) {
+    if (this.transcriptionPromise) {
       logger.info("文字起こし中のため、次の文字起こしをスキップします。");
       this.userAudioChunks.clear(); // 文字起こし中に新しい音声データが追加されるのを防ぐため、音声データをクリアする
-      this.loopTranscribeTerm(); // 再帰的に呼び出して、次の文字起こしを行う
       return;
     }
-    this.isTranscribing = true;
+    this.transcriptionPromise = this.executeTranscription();
+    try {
+      await this.transcriptionPromise;
+    } finally {
+      this.transcriptionPromise = null;
+    }
+  }
+
+  /*
+   *  * 音声データを文字起こしする関数
+   * @returns {Promise<void>}
+   */
+  private async executeTranscription(): Promise<void> {
     try {
       const allChunks: Buffer[] = [];
       for (const [userId, chunks] of this.userAudioChunks.entries()) {
@@ -183,11 +194,6 @@ class AudioReceiver {
       }
     } catch (error) {
       logger.error("文字起こし中にエラーが発生しました:", error);
-    } finally {
-      this.isTranscribing = false;
-      if (this.isRunning) {
-        this.loopTranscribeTerm(); // 再帰的に呼び出して、次の文字起こしを行う
-      }
     }
   }
 
