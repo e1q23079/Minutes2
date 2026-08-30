@@ -175,6 +175,7 @@ export default class Bot {
         this.writer = new Writer(getFileName());
         this.audioReceiver = new AudioReceiver(connection, this.writer);
         await this.connection?.playAnnounce();
+        logger.info("文字起こしを開始します。");
         if (!this.isDestroyed) {
           await this.audioReceiver?.start();
         }
