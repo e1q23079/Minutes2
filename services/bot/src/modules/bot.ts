@@ -13,7 +13,7 @@ import { logger } from "../logger.js";
 import { getFileName } from "./lib.js";
 import Writer from "./writer.js";
 
-const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
+const VC_WAIT_TIME = 60; // ボットが接続・切断するまでの待機時間（秒）
 
 /**
  * Discord Bot を管理するクラス
@@ -139,7 +139,7 @@ export default class Bot {
         logger.info(
           "ボイスチャンネルからユーザーが退出しました。接続を切断します。",
         );
-        //１分後にボットを切断する
+        // 1分後にボットを切断する
         this.botStatus = false;
         this.setProcessTimer();
       }
