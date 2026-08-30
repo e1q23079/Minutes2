@@ -49,7 +49,9 @@ async function main() {
     });
   });
 
+  logger.info("Voxnote を起動します。");
   await bot.start();
+  logger.info("Voxnote が正常に起動しました。");
 }
 
 main().catch((error) => {
