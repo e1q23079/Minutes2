@@ -1,4 +1,5 @@
 import type { VoiceState, Client, VoiceBasedChannel } from "discord.js";
+import { logger } from "../logger.js";
 
 /*
  * ボイスチャンネルにユーザーが参加したかどうかを取得する関数
@@ -55,7 +56,7 @@ function getVoiceChannel(
     }
     return channel;
   } catch (error) {
-    console.error("ボイスチャンネルの取得中にエラーが発生しました:", error);
+    logger.error("ボイスチャンネルの取得中にエラーが発生しました:", error);
     return null;
   }
 }

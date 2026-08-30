@@ -9,6 +9,7 @@ import {
 import type { VoiceBasedChannel } from "discord.js";
 import { AudioReceiver } from "./audio.js";
 import Transcriber from "./transcriber.js";
+import { logger } from "../logger.js";
 
 const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
 
@@ -49,13 +50,13 @@ export default class Bot {
     Transcriber.initialize(); // Transcriber の初期化を行う
 
     this.client.on(Events.Error, (error) => {
-      console.error("Discord Bot でエラーが発生しました:", error);
+      logger.error("Discord Bot でエラーが発生しました:", error);
     });
 
     const readyPromise = new Promise<void>((resolve, reject) => {
       this.client.once(Events.ClientReady, () => {
         try {
-          console.log("Discord Bot が起動しました。");
+          logger.info("Discord Bot が起動しました。");
           this.channel = getVoiceChannel(this.client, this.voice_channel_id);
           if (this.channel === null) {
             reject(
@@ -90,7 +91,7 @@ export default class Bot {
       try {
         await this.audioReceiver.stop();
       } catch (error) {
-        console.error("AudioReceiver の停止中にエラーが発生しました:", error);
+        logger.error("AudioReceiver の停止中にエラーが発生しました:", error);
       }
       this.audioReceiver = null;
     }
@@ -98,7 +99,7 @@ export default class Bot {
       try {
         this.connection.disconnect();
       } catch (error) {
-        console.error("Connection の切断中にエラーが発生しました:", error);
+        logger.error("Connection の切断中にエラーが発生しました:", error);
       }
       this.connection = null;
     }
@@ -118,7 +119,7 @@ export default class Bot {
         getEnterVCStatus(oldState, newState, this.voice_channel_id) &&
         getVoiceChannelStatus(newState.channel!) === "one"
       ) {
-        console.log(
+        logger.info(
           "ボイスチャンネルにユーザーが参加しました。接続を開始します。",
         );
         // 1分後にボットを接続する
@@ -128,7 +129,7 @@ export default class Bot {
         getLeaveVCStatus(oldState, newState, this.voice_channel_id) &&
         getVoiceChannelStatus(oldState.channel!) === "empty"
       ) {
-        console.log(
+        logger.info(
           "ボイスチャンネルからユーザーが退出しました。接続を切断します。",
         );
         //１分後にボットを切断する
@@ -155,13 +156,13 @@ export default class Bot {
       if (this.botStatus) {
         const connection = await this.connection?.connect();
         if (!connection) {
-          console.error("ボイスチャンネルへの接続に失敗しました。");
+          logger.error("ボイスチャンネルへの接続に失敗しました。");
           return;
         }
         this.botPrevStatus = this.botStatus;
         if (this.audioReceiver) {
           await this.audioReceiver.stop().catch((error) => {
-            console.error(
+            logger.error(
               "AudioReceiver の停止中にエラーが発生しました:",
               error,
             );
@@ -180,7 +181,7 @@ export default class Bot {
         this.connection?.disconnect();
       }
     } catch (error) {
-      console.error("ボイスチャンネルでの処理中にエラーが発生しました:", error);
+      logger.error("ボイスチャンネルでの処理中にエラーが発生しました:", error);
     } finally {
       this.isProcessing = false;
       if (!this.isDestroyed && this.botPrevStatus !== this.botStatus) {

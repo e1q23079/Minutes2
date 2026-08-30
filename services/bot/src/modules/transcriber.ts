@@ -2,6 +2,7 @@ import {
   pipeline,
   type AutomaticSpeechRecognitionPipeline,
 } from "@huggingface/transformers";
+import { logger } from "../logger.js";
 
 let transcriber: AutomaticSpeechRecognitionPipeline | null = null;
 let initPromise: Promise<void> | null = null;
@@ -11,25 +12,25 @@ let initPromise: Promise<void> | null = null;
  */
 async function initialize(): Promise<void> {
   if (transcriber) {
-    console.log("Whisperはすでに初期化されています。");
+    logger.info("Whisperはすでに初期化されています。");
     return;
   }
   if (initPromise) {
-    console.log("Whisperの初期化中です。完了を待っています...");
+    logger.info("Whisperの初期化中です。完了を待っています...");
     await initPromise;
     return;
   }
   initPromise = (async () => {
     try {
-      console.log("Whisperの初期化をしています...");
+      logger.info("Whisperの初期化をしています...");
       transcriber = await pipeline(
         "automatic-speech-recognition",
         "onnx-community/whisper-small",
         { device: "cpu" },
       );
-      console.log("Whisperの初期化が完了しました。");
+      logger.info("Whisperの初期化が完了しました。");
     } catch (error) {
-      console.error("Whisperの初期化中にエラーが発生しました:", error);
+      logger.error("Whisperの初期化中にエラーが発生しました:", error);
       initPromise = null;
       throw error;
     }

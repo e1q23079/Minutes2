@@ -3,6 +3,7 @@ import prism from "prism-media";
 import type { VoiceConnection } from "@discordjs/voice";
 import Transcriber from "./transcriber.js";
 import waveResampler from "wave-resampler";
+import { logger } from "../logger.js";
 
 class AudioReceiver {
   /*
@@ -44,7 +45,7 @@ class AudioReceiver {
           },
         });
         audioStream.on("error", (error) => {
-          console.error(
+          logger.error(
             `ユーザー ${userId} の音声受信中にエラーが発生しました:`,
             error,
           );
@@ -65,7 +66,7 @@ class AudioReceiver {
           this.userAudioChunks.set(userId, chunks);
         });
         pcmStream.on("error", (error) => {
-          console.error(
+          logger.error(
             `ユーザー ${userId} のPCMデータの受信中にエラーが発生しました:`,
             error,
           );
@@ -77,7 +78,7 @@ class AudioReceiver {
             audioStream.destroy();
             decoder.destroy();
           } catch (error) {
-            console.error(
+            logger.error(
               `ユーザー ${userId} の音声ストリームのクリーンアップ中にエラーが発生しました:`,
               error,
             );
@@ -90,7 +91,7 @@ class AudioReceiver {
           cleanup();
         });
       } catch (error) {
-        console.error(
+        logger.error(
           `ユーザー ${userId} の音声受信中にエラーが発生しました:`,
           error,
         );
@@ -113,7 +114,7 @@ class AudioReceiver {
       try {
         audioStream.destroy();
       } catch (error) {
-        console.error(
+        logger.error(
           `ユーザー ${userId} の音声ストリームの破棄中にエラーが発生しました:`,
           error,
         );
@@ -140,7 +141,7 @@ class AudioReceiver {
 
   private async transcribeAudioChunks(): Promise<void> {
     if (this.isTranscribing) {
-      console.log("文字起こし中のため、次の文字起こしをスキップします。");
+      logger.info("文字起こし中のため、次の文字起こしをスキップします。");
       this.userAudioChunks.clear(); // 文字起こし中に新しい音声データが追加されるのを防ぐため、音声データをクリアする
       this.loopTranscribeTerm(); // 再帰的に呼び出して、次の文字起こしを行う
       return;
@@ -160,10 +161,10 @@ class AudioReceiver {
       const audioBuffer = Buffer.concat(allChunks);
       const text = await this.transcribePcm(audioBuffer);
       if (text) {
-        console.log(`文字起こし結果 > ${text}`);
+        logger.debug(`文字起こし結果 > ${text}`);
       }
     } catch (error) {
-      console.error("文字起こし中にエラーが発生しました:", error);
+      logger.error("文字起こし中にエラーが発生しました:", error);
     } finally {
       this.isTranscribing = false;
       if (this.isRunning) {
@@ -223,7 +224,7 @@ class AudioReceiver {
         return text;
       }
     } catch (error) {
-      console.error("文字起こし中にエラーが発生しました。", error);
+      logger.error("文字起こし中にエラーが発生しました。", error);
     }
     return null;
   }

@@ -9,6 +9,7 @@ import {
   entersState,
 } from "@discordjs/voice";
 import type { VoiceBasedChannel } from "discord.js";
+import { logger } from "../logger.js";
 
 export default class Connection {
   private channel: VoiceBasedChannel;
@@ -53,14 +54,14 @@ export default class Connection {
             ),
           ]);
         } catch (error) {
-          console.error("ボイスチャンネルへの再接続に失敗しました:", error);
+          logger.error("ボイスチャンネルへの再接続に失敗しました:", error);
           this.disconnect();
         }
       });
-      console.log(`ボイスチャンネルに接続しました。`);
+      logger.info(`ボイスチャンネルに接続しました。`);
       return this.connection;
     } catch (error) {
-      console.error("ボイスチャンネルへの接続に失敗しました:", error);
+      logger.error("ボイスチャンネルへの接続に失敗しました:", error);
       this.disconnect();
       return null;
     }
@@ -82,7 +83,7 @@ export default class Connection {
       }
       this.connection = null;
     }
-    console.log(`ボイスチャンネルから切断しました。`);
+    logger.info(`ボイスチャンネルから切断しました。`);
   }
 
   /*
@@ -121,12 +122,12 @@ export default class Connection {
       if (this.player.state.status !== AudioPlayerStatus.Playing) {
         await entersState(this.player, AudioPlayerStatus.Playing, 5_000);
       }
-      console.log("アナウンス音声の再生が開始されました。");
+      logger.info("アナウンス音声の再生が開始されました。");
       await entersState(this.player, AudioPlayerStatus.Idle, 30_000);
-      console.log("アナウンス音声の音声再生が完了しました。");
+      logger.info("アナウンス音声の音声再生が完了しました。");
     } catch (error) {
       this.player?.stop(true);
-      console.error("アナウンス音声の再生中にエラーが発生しました:", error);
+      logger.error("アナウンス音声の再生中にエラーが発生しました:", error);
       throw error;
     }
   }

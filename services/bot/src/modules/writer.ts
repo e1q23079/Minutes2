@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { logger } from "../logger.js";
 
 export default class Writer {
   /*
@@ -18,11 +19,11 @@ export default class Writer {
     const logEntry = `ユーザー ${userId} の文字起こし結果: ${text}\n`;
     try {
       await fs.appendFile(this.logFilePath, logEntry, { encoding: "utf-8" });
-      console.log(
+      logger.info(
         `文字起こし結果をログファイルに保存しました: ${this.logFilePath}`,
       );
     } catch (error) {
-      console.error("ログファイルへの書き込み中にエラーが発生しました:", error);
+      logger.error("ログファイルへの書き込み中にエラーが発生しました:", error);
     }
   }
 }
