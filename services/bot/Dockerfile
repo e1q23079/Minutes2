@@ -19,4 +19,4 @@ RUN npm run build
 # 不要な依存関係を削除
 RUN npm prune --production
 # 起動
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
