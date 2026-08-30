@@ -4,6 +4,7 @@ import type { VoiceConnection } from "@discordjs/voice";
 import Transcriber from "./transcriber.js";
 import waveResampler from "wave-resampler";
 import { logger } from "../logger.js";
+import Writer from "./writer.js";
 
 class AudioReceiver {
   /*
@@ -19,12 +20,15 @@ class AudioReceiver {
   private isTranscribing = false; // 文字起こし中かどうかのフラグ
   private isRunning = false; // 音声受信中かどうかのフラグ
   private transcribeTimer: NodeJS.Timeout | null = null; // 文字起こしのタイマーを格納する変数
+  private writer: Writer | null = null; // Writerのインスタンスを保持する変数
   /*
    * 音声受信を開始する関数
    * @param connection 接続情報
+   * @param writer Writerのインスタンス
    */
-  constructor(connection: VoiceConnection) {
+  constructor(connection: VoiceConnection, writer: Writer | null = null) {
     this.connection = connection;
+    this.writer = writer;
   }
   /*
    * 音声受信を開始する関数
@@ -162,6 +166,9 @@ class AudioReceiver {
       const text = await this.transcribePcm(audioBuffer);
       if (text) {
         logger.debug(`文字起こし結果 > ${text}`);
+        if (this.writer) {
+          await this.writer.logTranscription(text);
+        }
       }
     } catch (error) {
       logger.error("文字起こし中にエラーが発生しました:", error);

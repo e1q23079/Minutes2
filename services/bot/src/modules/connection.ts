@@ -124,7 +124,7 @@ export default class Connection {
       }
       logger.info("アナウンス音声の再生が開始されました。");
       await entersState(this.player, AudioPlayerStatus.Idle, 30_000);
-      logger.info("アナウンス音声の音声再生が完了しました。");
+      logger.info("アナウンス音声の再生が完了しました。");
     } catch (error) {
       this.player?.stop(true);
       logger.error("アナウンス音声の再生中にエラーが発生しました:", error);

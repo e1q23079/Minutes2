@@ -10,6 +10,8 @@ import type { VoiceBasedChannel } from "discord.js";
 import { AudioReceiver } from "./audio.js";
 import Transcriber from "./transcriber.js";
 import { logger } from "../logger.js";
+import { getFileName } from "./lib.js";
+import Writer from "./writer.js";
 
 const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
 
@@ -29,6 +31,7 @@ export default class Bot {
   private isProcessing: boolean = false; // ボイスチャンネルでの処理中かどうかを管理するフラグ
   private audioReceiver: AudioReceiver | null = null; // AudioReceiverのインスタンスを保持する変数
   private isDestroyed: boolean = false;
+  private writer: Writer | null = null; // Writerのインスタンスを保持する変数
   /**
    * Discord Bot を初期化する
    * @param api_key Discord Bot の API キー
@@ -169,7 +172,8 @@ export default class Bot {
           });
           this.audioReceiver = null;
         }
-        this.audioReceiver = new AudioReceiver(connection);
+        this.writer = new Writer(getFileName());
+        this.audioReceiver = new AudioReceiver(connection, this.writer);
         await this.connection?.playAnnounce();
         if (!this.isDestroyed) {
           await this.audioReceiver?.start();
@@ -179,6 +183,8 @@ export default class Bot {
         await this.audioReceiver?.stop();
         this.audioReceiver = null;
         this.connection?.disconnect();
+        this.audioReceiver = null;
+        this.writer = null;
       }
     } catch (error) {
       logger.error("ボイスチャンネルでの処理中にエラーが発生しました:", error);
