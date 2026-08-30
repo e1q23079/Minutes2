@@ -1,6 +1,7 @@
 import threading
 
 from lib.data import Data
+from lib.llm import LLM
 from lib.logger import logger
 from lib.notification import Notification
 
@@ -25,6 +26,7 @@ class Process:
         self.notification = notification
         self.interval = interval
         self._stop_event = threading.Event()
+        self.llm = LLM()
 
     def _processing(self):
         """
@@ -37,7 +39,8 @@ class Process:
             for file in files:
                 try:
                     content = self.data.read_file(file)
-                    self.notification.send_notification(content)
+                    summary = self.llm.generate_summary(content)
+                    self.notification.send_notification(summary)
                     self.data.delete_file(file)
                 except Exception as e:
                     logger.error(f"エラーが発生しました {file}: {e}")
