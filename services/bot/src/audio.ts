@@ -36,45 +36,65 @@ class AudioReceiver {
       if (this.activeUserStreams.has(userId)) {
         return;
       }
-      const audioStream = receiver.subscribe(userId, {
-        end: {
-          behavior: EndBehaviorType.AfterSilence,
-          duration: 1000,
-        },
-      });
-      this.activeUserStreams.set(userId, audioStream);
-      const decoder = new prism.opus.Decoder({
-        rate: this.SAMPLE_RATE,
-        channels: this.CHANNELS,
-        frameSize: 960,
-      });
-      const pcmStream = audioStream.pipe(decoder);
-      pcmStream.on("data", (chunk: Buffer) => {
-        if (!this.userAudioChunks.has(userId)) {
-          this.userAudioChunks.set(userId, []);
-        }
-        const chunks = this.userAudioChunks.get(userId) || [];
-        chunks.push(chunk);
-        this.userAudioChunks.set(userId, chunks);
-      });
-      pcmStream.on("error", (error) => {
+      try {
+        const audioStream = receiver.subscribe(userId, {
+          end: {
+            behavior: EndBehaviorType.AfterSilence,
+            duration: 1000,
+          },
+        });
+        audioStream.on("error", (error) => {
+          console.error(
+            `ユーザー ${userId} の音声受信中にエラーが発生しました:`,
+            error,
+          );
+        });
+        this.activeUserStreams.set(userId, audioStream);
+        const decoder = new prism.opus.Decoder({
+          rate: this.SAMPLE_RATE,
+          channels: this.CHANNELS,
+          frameSize: 960,
+        });
+        const pcmStream = audioStream.pipe(decoder);
+        pcmStream.on("data", (chunk: Buffer) => {
+          if (!this.userAudioChunks.has(userId)) {
+            this.userAudioChunks.set(userId, []);
+          }
+          const chunks = this.userAudioChunks.get(userId) || [];
+          chunks.push(chunk);
+          this.userAudioChunks.set(userId, chunks);
+        });
+        pcmStream.on("error", (error) => {
+          console.error(
+            `ユーザー ${userId} のPCMデータの受信中にエラーが発生しました:`,
+            error,
+          );
+        });
+        const cleanup = () => {
+          try {
+            this.activeUserStreams.delete(userId);
+            audioStream.unpipe(decoder);
+            audioStream.destroy();
+            decoder.destroy();
+          } catch (error) {
+            console.error(
+              `ユーザー ${userId} の音声ストリームのクリーンアップ中にエラーが発生しました:`,
+              error,
+            );
+          }
+        };
+        pcmStream.on("end", async () => {
+          cleanup();
+        });
+        pcmStream.on("close", async () => {
+          cleanup();
+        });
+      } catch (error) {
         console.error(
-          `ユーザー ${userId} のPCMデータの受信中にエラーが発生しました:`,
+          `ユーザー ${userId} の音声受信中にエラーが発生しました:`,
           error,
         );
-      });
-      const cleanup = () => {
-        this.activeUserStreams.delete(userId);
-        audioStream.unpipe(decoder);
-        audioStream.destroy();
-        decoder.destroy();
-      };
-      pcmStream.on("end", async () => {
-        cleanup();
-      });
-      pcmStream.on("close", async () => {
-        cleanup();
-      });
+      }
     });
     this.loopTranscribeTerm();
   }
@@ -90,8 +110,20 @@ class AudioReceiver {
       this.transcribeTimer = null;
     }
     for (const [userId, audioStream] of this.activeUserStreams.entries()) {
-      audioStream.destroy();
+      try {
+        audioStream.destroy();
+      } catch (error) {
+        console.error(
+          `ユーザー ${userId} の音声ストリームの破棄中にエラーが発生しました:`,
+          error,
+        );
+      }
       this.activeUserStreams.delete(userId);
+    }
+    let waitCount = 0;
+    while (this.isTranscribing && waitCount < 10) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      waitCount++;
     }
     await this.transcribeAudioChunks();
   }
@@ -117,8 +149,10 @@ class AudioReceiver {
     try {
       const allChunks: Buffer[] = [];
       for (const [userId, chunks] of this.userAudioChunks.entries()) {
-        allChunks.push(...chunks);
-        this.userAudioChunks.set(userId, []);
+        if (chunks.length > 0) {
+          allChunks.push(...chunks);
+        }
+        this.userAudioChunks.delete(userId);
       }
       if (allChunks.length === 0) {
         return;
@@ -176,10 +210,15 @@ class AudioReceiver {
       combinedSamples.set(resampled);
       combinedSamples.set(paddingSamples, resampled.length);
       // Whisper で文字起こし
-      const text = await Transcriber.transcribe(
-        combinedSamples,
-        this.TARGET_SAMPLE_RATE,
-      );
+      const text = await Promise.race([
+        Transcriber.transcribe(combinedSamples, this.TARGET_SAMPLE_RATE),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("文字起こしがタイムアウトしました。")),
+            30_000,
+          ),
+        ),
+      ]);
       if (text.trim() !== "") {
         return text;
       }
