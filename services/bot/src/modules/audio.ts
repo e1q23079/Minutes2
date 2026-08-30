@@ -133,6 +133,10 @@ class AudioReceiver {
     await this.transcribeAudioChunks();
   }
 
+  /*
+   * 音声データを定期的に文字起こしする関数
+   * @returns {Promise<void>}
+   */
   private async loopTranscribeTerm(): Promise<void> {
     if (!this.isRunning) {
       return;
@@ -143,6 +147,10 @@ class AudioReceiver {
     );
   }
 
+  /*
+   * 音声データを文字起こしする関数
+   * @returns {Promise<void>}
+   */
   private async transcribeAudioChunks(): Promise<void> {
     if (this.isTranscribing) {
       logger.info("文字起こし中のため、次の文字起こしをスキップします。");

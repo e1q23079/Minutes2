@@ -110,6 +110,10 @@ export default class Bot {
     await this.client.destroy();
   }
 
+  /*
+   * ボイスチャンネルのイベントリスナーを設定する関数
+   * @returns {void}
+   */
   private setupEventListeners(): void {
     if (this.isDestroyed) {
       return;
