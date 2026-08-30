@@ -1,4 +1,5 @@
 import os
+import signal
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -11,7 +12,7 @@ from lib.process import Process
 load_dotenv()
 
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
-FILE_PATH = os.environ.get("DATA_PATH", "../data")
+FILE_PATH = os.environ.get("DATA_DIR", "../data")
 
 INTERVAL = 10
 
@@ -22,7 +23,6 @@ def main():
     """
 
     try:
-        logger.info("管理プロセスを開始します。")
         data = Data(Path(FILE_PATH))
         if not WEBHOOK_URL:
             raise ValueError(
@@ -30,6 +30,13 @@ def main():
             )
         notification = Notification(WEBHOOK_URL)
         process = Process(data, notification, interval=INTERVAL)
+
+        def shutdown(signum, frame):
+            process.stop()
+
+        signal.signal(signal.SIGTERM, shutdown)
+        signal.signal(signal.SIGINT, shutdown)
+
         process.start()
 
     except KeyboardInterrupt:

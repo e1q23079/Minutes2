@@ -3,7 +3,6 @@ FROM node:24-slim
 # Install git-lfs
 RUN apt-get update \
     && apt-get install -y \
-    git-lfs \
     ffmpeg \
     build-essential \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
