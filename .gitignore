@@ -3,3 +3,11 @@ node_modules/
 
 # Build
 dist/
+
+# env
+.env
+.env.*
+!.env.example
+
+# transcriptoions
+transcription_*.txt
