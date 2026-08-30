@@ -32,4 +32,24 @@ export default class Writer {
       logger.error("ログファイルへの書き込み中にエラーが発生しました:", error);
     }
   }
+  /*
+   * 文字起こし結果の終了をログファイルに書き込む関数
+   * @returns {Promise<void>}
+   */
+  public async endLog() {
+    try {
+      await fs.appendFile(
+        this.logFilePath,
+        "\n--- End of Transcription ---\n",
+        {
+          encoding: "utf-8",
+        },
+      );
+      logger.debug(
+        `文字起こし結果の終了をログファイルに保存しました: ${this.logFilePath}`,
+      );
+    } catch (error) {
+      logger.error("ログファイルへの書き込み中にエラーが発生しました:", error);
+    }
+  }
 }
