@@ -131,6 +131,9 @@ class AudioReceiver {
       waitCount++;
     }
     await this.transcribeAudioChunks();
+    this.writer?.endLog().catch((error) => {
+      logger.error("Writer の endLog() 中にエラーが発生しました:", error);
+    });
   }
 
   /*

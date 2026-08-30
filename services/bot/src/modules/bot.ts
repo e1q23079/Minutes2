@@ -189,9 +189,6 @@ export default class Bot {
         this.audioReceiver = null;
         this.connection?.disconnect();
         this.audioReceiver = null;
-        this.writer?.endLog().catch((error) => {
-          logger.error("Writer の endLog() 中にエラーが発生しました:", error);
-        });
         this.writer = null;
       }
     } catch (error) {
