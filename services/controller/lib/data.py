@@ -29,6 +29,16 @@ class Data:
                     files.append(file_path)
         return files
 
+    def get_transcription_name(self, file_path: Path) -> str:
+        """
+        指定された議事録ファイルの名前を取得します。
+        Args:
+            file_path (Path): 名前を取得するファイルのパス。
+        Returns:
+            str: ファイルの名前。
+        """
+        return file_path.stem.removeprefix("transcription_")
+
     def read_file(self, file_path: Path):
         """
         指定されたファイルの内容を読み取ります。
