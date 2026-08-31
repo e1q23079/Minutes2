@@ -13,4 +13,7 @@ class LLM:
         """
         与えられたテキストの要約を生成します。
         """
+        import time
+
+        time.sleep(10)  # 仮の処理時間をシミュレートするためのスリープ
         return "This is a generated summary -> " + text[:50] + "..."  # 仮の要約生成ロジック
