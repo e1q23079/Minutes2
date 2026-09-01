@@ -9,7 +9,7 @@ dist/
 .env.*
 !.env.example
 
-# transcriptoions
+# transcription
 transcription_*.txt
 
 # .venv
