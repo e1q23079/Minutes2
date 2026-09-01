@@ -1,6 +1,6 @@
 import threading
-from pathlib import Path
 
+from lib.content import make_content
 from lib.data import Data
 from lib.llm import LLM
 from lib.logger import logger
@@ -29,20 +29,6 @@ class Process:
         self._stop_event = threading.Event()
         self.llm = LLM()
 
-    def _make_content(self, file: Path, content: str) -> str:
-        """
-        コンテンツから見出しを生成します。
-        Args:
-            file (Path): 見出しを生成する元となるファイルのパス。
-            content (str): 元となるコンテンツ。
-            processing (bool): 処理中かどうか。
-        Returns:
-            str: 生成された見出し。
-        """
-        content_name = self.data.get_transcription_name(file)
-        content = f"# {content_name}\n\n{content}"
-        return content
-
     def _processing(self):
         """
         データ処理と通知のメインループ。
@@ -56,12 +42,12 @@ class Process:
                     # データを読み込み
                     content = self.data.read_file(file)
                     # 通知を送信
-                    message = self._make_content(file, "議事録を作成しています...")
+                    message = make_content(file, self.data, "議事録を作成しています...")
                     message_id = self.notification.send_notification(message)
                     # LLMを使って要約を生成
                     summary = self.llm.generate_summary(content)
                     # 通知を編集して要約を送信
-                    message = self._make_content(file, summary)
+                    message = make_content(file, self.data, summary)
                     self.notification.edit_notification(message_id, message)
                     # 処理が完了したファイルを削除
                     self.data.delete_file(file)
