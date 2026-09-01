@@ -10,6 +10,9 @@
     },
     "ghcr.io/devcontainers/features/python": {
       "version": "3.12"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:4": {
+      "moby": false
     }
   },
   "postCreateCommand": "cd services/bot && npm install && cd ../controller && pip install -r requirements.txt",
