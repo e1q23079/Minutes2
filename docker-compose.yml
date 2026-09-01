@@ -8,11 +8,12 @@ services:
       - API_KEY=${API_KEY}
       - VOICE_CHANNEL_ID=${VOICE_CHANNEL_ID}
       - DATA_DIR=/data
+      - TZ=Asia/Tokyo
     volumes:
       - ./services/data:/data
     depends_on:
       ollama:
-          condition: service_healthy
+        condition: service_healthy
 
   controller:
     build:
@@ -27,9 +28,9 @@ services:
       - ./services/data:/data
     depends_on:
       ollama:
-          condition: service_healthy
+        condition: service_healthy
       bot:
-          condition: service_started
+        condition: service_started
 
   ollama:
     build:
