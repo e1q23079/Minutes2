@@ -17,6 +17,7 @@ Voxnote は、Discord のボイスチャンネルで行われる会議や雑談�
 - Discord.js
 - Hugging Face Transformers
 - Whisper (ONNX)
+- Ollama（ローカル LLM 実行）
 - Docker / Docker Compose
 
 ## 必要環境
@@ -27,6 +28,7 @@ Voxnote は、Discord のボイスチャンネルで行われる会議や雑談�
 - Discord Bot の API トークン
 - 対象の Discord ボイスチャンネル ID
 - Webhook URL（議事録送信先）
+- Ollama（ローカル開発時の LLM 実行用、例: `gemma2:2b`）
 - Docker / Docker Compose（コンテナ利用時）
 
 ## 環境変数設定
@@ -52,6 +54,26 @@ WEBHOOK_URL=<YOUR_WEBHOOK_URL>
 ```
 
 - `WEBHOOK_URL`: 議事録を送信する Webhook の URL（例：Slack, Discord, カスタムサーバー）
+
+### ローカル LLM（Ollama）の環境変数
+
+ローカル開発時は Ollama を使って生成系の処理を実行する場合があります。まず、Ollama のサーバーを起動してからモデルを pull して利用します。
+
+ターミナル 1 でサーバーを起動:
+
+```bash
+ollama serve
+```
+
+別ターミナル 2 でモデルを pull して確認:
+
+```bash
+ollama pull gemma2:2b
+ollama list
+ollama run gemma2:2b
+```
+
+この例では `gemma2:2b` を使用し、ローカル環境で会話確認や生成処理の動作確認を行えます。`ollama serve` はバックグラウンドでローカル API を提供するため、モデルの実行前に別ターミナルで起動しておくのが基本です。
 
 ## ローカル開発での起動
 

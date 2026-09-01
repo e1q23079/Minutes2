@@ -10,6 +10,9 @@ services:
       - DATA_DIR=/data
     volumes:
       - ./services/data:/data
+    depends_on:
+      ollama:
+          condition: service_healthy
 
   controller:
     build:
@@ -19,5 +22,22 @@ services:
     environment:
       - WEBHOOK_URL=${WEBHOOK_URL}
       - DATA_DIR=/data
+      - OLLAMA_HOST=http://ollama:11434
     volumes:
       - ./services/data:/data
+    depends_on:
+      ollama:
+          condition: service_healthy
+      bot:
+          condition: service_started
+
+  ollama:
+    build:
+      context: ./services/llm
+      dockerfile: Dockerfile
+    container_name: voxnote-llm
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
