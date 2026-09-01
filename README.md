@@ -55,7 +55,7 @@ WEBHOOK_URL=<YOUR_WEBHOOK_URL>
 
 - `WEBHOOK_URL`: 議事録を送信する Webhook の URL（例：Slack, Discord, カスタムサーバー）
 
-### ローカル LLM（Ollama）の環境変数
+### ローカル LLM（Ollama）の環境
 
 ローカル開発時は Ollama を使って生成系の処理を実行する場合があります。まず、Ollama のサーバーを起動してからモデルを pull して利用します。
 
