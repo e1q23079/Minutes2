@@ -11,7 +11,7 @@
     "ghcr.io/devcontainers/features/python": {
       "version": "3.12"
     },
-    "ghcr.io/devcontainers/features/docker-in-docker:4": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker": {
       "moby": false
     }
   },
