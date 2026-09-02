@@ -42,28 +42,24 @@ class LLM:
         try:
             logger.info("議事録作成中．．．")
             response = ollama.chat(
-                        model='gemma2:2b',
-                        messages=[
-                            {
-                                'role': 'system',
-                                'content': 'あなたはプロフェッショナルな議事録作成アシスタントです。すべての回答を必ず日本語（Japanese）で行ってください。' # noqa : E501
-                            },
-                            {
-                                'role': 'user',
-                             'content': prompt
-                            },
-                        ]
-                    )
-            minutes = response['message']['content']
+                model="gemma2:2b",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "あなたはプロフェッショナルな議事録作成アシスタントです。すべての回答を必ず日本語（Japanese）で行ってください。",  # noqa : E501
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            minutes = response["message"]["content"]
             # print(minutes)
 
-            #save_dir = "../../data"
-            #file_path = os.path.join(save_dir, "minutes.md")
+            # save_dir = "../../data"
+            # file_path = os.path.join(save_dir, "minutes.md")
 
-
-            #with open(file_path, "w", encoding="utf-8") as f:
+            # with open(file_path, "w", encoding="utf-8") as f:
             #    f.write(minutes)
-            #print("結果を 'minutes.md' に保存しました。")
+            # print("結果を 'minutes.md' に保存しました。")
             return minutes
         except Exception as e:
             logger.error(f"エラーが発生しました: {e}")
