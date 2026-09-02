@@ -26,6 +26,7 @@ class Notification:
             str: 送信された通知のID。
         """
         logger.info("通知を送信しています。")
+        message = message[:2000]  # Discordのメッセージは2000文字まで
         data = {"content": message}
         response = requests.post(f"{self.webhook_url}?wait=true", json=data, timeout=10)
         response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
@@ -41,6 +42,7 @@ class Notification:
             new_message (str): 新しい通知の内容。
         """
         logger.info("通知を編集しています。")
+        new_message = new_message[:2000]  # Discordのメッセージは2000文字まで
         data = {"content": new_message}
         response = requests.patch(f"{self.webhook_url}/messages/{message_id}", json=data, timeout=10)
         response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
