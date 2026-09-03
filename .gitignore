@@ -9,8 +9,9 @@ dist/
 .env.*
 !.env.example
 
-# transcription
-transcription_*.txt
+# recording
+rec_*.wav
+rec_*.dat
 
 # .venv
 .venv/

@@ -1,5 +1,8 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import { FileWriter } from "wav";
+import path from "path";
+import fs from "fs";
+import fsPromises from "fs/promises";
+import { getFileName } from "./lib.js";
 import { logger } from "../logger.js";
 
 const DATA_DIR =
@@ -7,45 +10,66 @@ const DATA_DIR =
 
 export default class Writer {
   /*
-   * ログファイルに文字起こし結果を書き込むクラス
+   * 音声ファイルの作成と管理を行うクラス
    */
-  private logFilePath: string;
+  private fileName: string;
   constructor(fileName: string) {
-    this.logFilePath = path.join(DATA_DIR, `transcription_${fileName}.txt`);
+    this.fileName = fileName;
   }
+
   /*
-   * * 文字起こし結果をログファイルに書き込む関数
+   * 録音用のWAVファイルを作成する関数
    * @param userId ユーザーID
-   *   @param text 文字起こし結果の文字列
+   * @returns { waveWriter: FileWriter, recFilePath: string }
+   */
+  public createWavFileWriter(userId: string): {
+    waveWriter: FileWriter;
+    recFilePath: string;
+  } {
+    const timestamp = getFileName();
+    const recFilePath = path.join(
+      DATA_DIR,
+      `${this.fileName}/rec_${timestamp}_${userId}.wav`,
+    );
+    const dir = path.dirname(recFilePath);
+    fs.mkdirSync(dir, { recursive: true });
+    const waveWriter = new FileWriter(recFilePath, {
+      sampleRate: 48000,
+      channels: 2,
+      bitDepth: 16,
+    });
+    return { waveWriter, recFilePath };
+  }
+
+  /*
+   * 録音ファイルが空である場合に削除する関数
+   * @param recFilePath 録音ファイルのパス
    * @returns {Promise<void>}
    */
-  public async logTranscription(text: string) {
-    const logEntry = `${text}\n`;
+  public async cleanupAudioFile(recFilePath: string): Promise<void> {
     try {
-      await fs.appendFile(this.logFilePath, logEntry, { encoding: "utf-8" });
-      logger.debug(
-        `文字起こし結果をログファイルに保存しました: ${this.logFilePath}`,
-      );
+      const stats = await fsPromises.stat(recFilePath);
+      if (stats.size <= 44) {
+        await fsPromises.unlink(recFilePath);
+        logger.info("空の音声ファイルを削除しました");
+      }
     } catch (error) {
-      logger.error("ログファイルへの書き込み中にエラーが発生しました:", error);
+      logger.error("ファイルの状態を確認中にエラーが発生しました", error);
     }
   }
+
   /*
-   * 文字起こし結果の終了をログファイルに書き込む関数
+   * 録音の終了をログファイルに書き込む関数
    * @returns {Promise<void>}
    */
   public async endLog() {
+    const filePath = path.join(DATA_DIR, `${this.fileName}/rec_end.dat`);
+    const dir = path.dirname(filePath);
+    fs.mkdirSync(dir, { recursive: true });
+    const logEntry = "\n--- End of Recording ---\n";
     try {
-      await fs.appendFile(
-        this.logFilePath,
-        "\n--- End of Transcription ---\n",
-        {
-          encoding: "utf-8",
-        },
-      );
-      logger.debug(
-        `文字起こし結果の終了をログファイルに保存しました: ${this.logFilePath}`,
-      );
+      await fsPromises.appendFile(filePath, logEntry, { encoding: "utf-8" });
+      logger.debug(`録音の終了をログに記録しました: ${filePath}`);
     } catch (error) {
       logger.error("ログファイルへの書き込み中にエラーが発生しました:", error);
     }

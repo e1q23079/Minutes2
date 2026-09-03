@@ -8,12 +8,11 @@ import {
 } from "./channel.js";
 import type { VoiceBasedChannel } from "discord.js";
 import { AudioReceiver } from "./audio.js";
-import Transcriber from "./transcriber.js";
 import { logger } from "../logger.js";
 import { getFileName } from "./lib.js";
 import Writer from "./writer.js";
 
-const VC_WAIT_TIME = 60; // ボットが接続・切断するまでの待機時間（秒）
+const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
 
 /**
  * Discord Bot を管理するクラス
@@ -50,7 +49,7 @@ export default class Bot {
    * @returns Promise<void>
    */
   public async start(): Promise<void> {
-    await Transcriber.initialize(); // Transcriber の初期化を行う
+    // await Transcriber.initialize(); // Transcriber の初期化を行う
 
     this.client.on(Events.Error, (error) => {
       logger.error("Discord Bot でエラーが発生しました:", error);
