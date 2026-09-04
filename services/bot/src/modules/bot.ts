@@ -163,9 +163,10 @@ export default class Bot {
         const connection = await this.connection?.connect();
         if (!connection) {
           logger.error("ボイスチャンネルへの接続に失敗しました。");
+          this.botStatus = false;
+          this.botPrevStatus = false;
           return;
         }
-        this.botPrevStatus = this.botStatus;
         if (this.audioReceiver) {
           await this.audioReceiver.stop().catch((error) => {
             logger.error(
@@ -182,13 +183,20 @@ export default class Bot {
         if (!this.isDestroyed) {
           await this.audioReceiver?.start();
         }
+        this.botPrevStatus = true;
       } else {
-        this.botPrevStatus = this.botStatus;
-        await this.audioReceiver?.stop();
-        this.audioReceiver = null;
+        if (this.audioReceiver) {
+          await this.audioReceiver?.stop().catch((error) => {
+            logger.error(
+              "AudioReceiver の停止中にエラーが発生しました:",
+              error,
+            );
+          });
+          this.audioReceiver = null;
+        }
         this.connection?.disconnect();
-        this.audioReceiver = null;
         this.writer = null;
+        this.botPrevStatus = false;
       }
     } catch (error) {
       logger.error("ボイスチャンネルでの処理中にエラーが発生しました:", error);
@@ -222,7 +230,12 @@ export default class Bot {
     }
     this.processTimer = setTimeout(() => {
       this.processTimer = null;
-      this.VCProcess();
+      this.VCProcess().catch((error) => {
+        logger.error(
+          "ボイスチャンネルでの処理中にエラーが発生しました:",
+          error,
+        );
+      });
     }, VC_WAIT_TIME * 1000);
   }
 }
