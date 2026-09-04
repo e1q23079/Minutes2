@@ -9,7 +9,7 @@ import {
 import type { VoiceBasedChannel } from "discord.js";
 import { AudioReceiver } from "./audio.js";
 import { logger } from "../logger.js";
-import { getFileName } from "./lib.js";
+import { getFileNameDate } from "./lib.js";
 import Writer from "./writer.js";
 
 const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
@@ -175,10 +175,10 @@ export default class Bot {
           });
           this.audioReceiver = null;
         }
-        this.writer = new Writer(getFileName());
+        this.writer = new Writer(getFileNameDate());
         this.audioReceiver = new AudioReceiver(connection, this.writer);
         await this.connection?.playAnnounce();
-        logger.info("文字起こしを開始します。");
+        logger.info("録音を開始します。");
         if (!this.isDestroyed) {
           await this.audioReceiver?.start();
         }

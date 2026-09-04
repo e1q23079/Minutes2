@@ -48,7 +48,6 @@ class AudioReceiver {
           );
         });
         this.activeUserStreams.set(userId, audioStream);
-
         if (!this.writer) {
           logger.error("Writerのインスタンスが初期化されていません。");
           return;
@@ -56,7 +55,6 @@ class AudioReceiver {
         const { waveWriter, recFilePath } =
           this.writer.createWavFileWriter(userId);
         const decoder = new Decoder();
-
         pipeline(audioStream, decoder, waveWriter, async (err) => {
           this.activeUserStreams.delete(userId);
           if (err) {

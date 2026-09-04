@@ -2,7 +2,7 @@ import { FileWriter } from "wav";
 import path from "path";
 import fs from "fs";
 import fsPromises from "fs/promises";
-import { getFileName } from "./lib.js";
+import { getFileNameDate } from "./lib.js";
 import { logger } from "../logger.js";
 
 const DATA_DIR =
@@ -26,7 +26,7 @@ export default class Writer {
     waveWriter: FileWriter;
     recFilePath: string;
   } {
-    const timestamp = getFileName();
+    const timestamp = getFileNameDate();
     const recFilePath = path.join(
       DATA_DIR,
       `${this.fileName}/rec_${timestamp}_${userId}.wav`,
