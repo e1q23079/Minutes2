@@ -13,7 +13,7 @@ export default class Writer {
    */
   private fileName: string;
   constructor(fileName: string) {
-    this.fileName = fileName;
+    this.fileName = `recording_${fileName}`;
   }
 
   /*
