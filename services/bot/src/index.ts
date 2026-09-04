@@ -13,13 +13,13 @@ async function main() {
       return;
     }
     isShuttingDown = true;
-    logger.info("Voxnote を停止します。");
+    logger.info("Minutes を停止します。");
     try {
       await bot.stop();
-      logger.info("Voxnote が正常に停止しました。");
+      logger.info("Minutes が正常に停止しました。");
       process.exit(0);
     } catch (error: unknown) {
-      logger.error("Voxnote の停止中にエラーが発生しました:", error);
+      logger.error("Minutes の停止中にエラーが発生しました:", error);
       process.exit(1);
     }
   };
@@ -49,12 +49,12 @@ async function main() {
     });
   });
 
-  logger.info("Voxnote を起動します。");
+  logger.info("Minutes を起動します。");
   await bot.start();
-  logger.info("Voxnote が正常に起動しました。");
+  logger.info("Minutes が正常に起動しました。");
 }
 
 main().catch((error) => {
-  logger.error("Voxnote の起動中にエラーが発生しました:", error);
+  logger.error("Minutes の起動中にエラーが発生しました:", error);
   process.exit(1);
 });
