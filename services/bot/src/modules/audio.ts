@@ -1,16 +1,16 @@
 import { EndBehaviorType, AudioReceiveStream } from "@discordjs/voice";
-import { pipeline } from "stream";
+import { pipeline } from "node:stream/promises";
 import type { VoiceConnection } from "@discordjs/voice";
 import { Decoder } from "./decoder.js";
 import { logger } from "../logger.js";
 import Writer from "./writer.js";
 
+/*
+ * 音声を受信するクラス
+ */
 class AudioReceiver {
-  /*
-   * 音声を受信するクラス
-   */
   private connection: VoiceConnection;
-  private activeUserStreams = new Map<string, AudioReceiveStream>(); // ユーザーごとの音声ストリームのタイマーを格納するマップ
+  private activeUserStreams = new Map<string, AudioReceiveStream>(); // ユーザーIDとAudioReceiveStreamのマップ
   private isRunning = false; // 音声受信中かどうかのフラグ
   private writer: Writer | null = null; // Writerのインスタンスを保持する変数
   /*
@@ -29,48 +29,13 @@ class AudioReceiver {
   public async start(): Promise<void> {
     this.isRunning = true;
     const receiver = this.connection.receiver;
-    receiver.speaking.on("start", (userId) => {
-      if (!this.isRunning) return;
-      if (this.activeUserStreams.has(userId)) {
-        return;
-      }
-      try {
-        const audioStream = receiver.subscribe(userId, {
-          end: {
-            behavior: EndBehaviorType.AfterSilence,
-            duration: 1000,
-          },
-        });
-        audioStream.on("error", (error) => {
-          logger.error(
-            `ユーザー ${userId} の音声受信中にエラーが発生しました:`,
-            error,
-          );
-        });
-        this.activeUserStreams.set(userId, audioStream);
-        if (!this.writer) {
-          logger.error("Writerのインスタンスが初期化されていません。");
-          return;
-        }
-        const { waveWriter, recFilePath } =
-          this.writer.createWavFileWriter(userId);
-        const decoder = new Decoder();
-        pipeline(audioStream, decoder, waveWriter, async (err) => {
-          this.activeUserStreams.delete(userId);
-          if (err) {
-            logger.error(
-              `ユーザー ${userId} の音声パイプライン中にエラーが発生しました:`,
-              err,
-            );
-          }
-          await this.writer?.cleanupAudioFile(recFilePath);
-        });
-      } catch (error) {
+    receiver.speaking.on("start", async (userId) => {
+      this.handleUserAudioStream(userId).catch((error) => {
         logger.error(
           `ユーザー ${userId} の音声受信の開始中にエラーが発生しました:`,
           error,
         );
-      }
+      });
     });
   }
 
@@ -89,12 +54,66 @@ class AudioReceiver {
           error,
         );
       }
-      this.activeUserStreams.delete(userId);
     }
 
     await this.writer?.endLog().catch((error) => {
       logger.error("Writer の endLog() 中にエラーが発生しました:", error);
     });
+  }
+
+  /*
+   * ユーザーの音声ストリームを処理する関数
+   * @param userId ユーザーID
+   * @returns {Promise<void>}
+   */
+  private async handleUserAudioStream(userId: string): Promise<void> {
+    if (!this.isRunning) return;
+    if (this.activeUserStreams.has(userId)) {
+      return;
+    }
+    if (!this.writer) {
+      logger.error("Writerのインスタンスが初期化されていません。");
+      return;
+    }
+    try {
+      const audioStream = this.connection.receiver.subscribe(userId, {
+        end: {
+          behavior: EndBehaviorType.AfterSilence,
+          duration: 1000,
+        },
+      });
+      audioStream.on("error", (error) => {
+        logger.error(
+          `ユーザー ${userId} の音声受信中にエラーが発生しました:`,
+          error,
+        );
+      });
+      this.activeUserStreams.set(userId, audioStream);
+      const { waveWriter, recFilePath } =
+        this.writer.createWavFileWriter(userId);
+      const decoder = new Decoder();
+      try {
+        await pipeline(audioStream, decoder, waveWriter);
+      } catch (error) {
+        logger.error(
+          `ユーザー ${userId} の音声受信のパイプライン中にエラーが発生しました:`,
+          error,
+        );
+      } finally {
+        this.activeUserStreams.delete(userId);
+        await this.writer.cleanupAudioFile(recFilePath).catch((error) => {
+          logger.error(
+            `ユーザー ${userId} の音声ファイルのクリーンアップ中にエラーが発生しました:`,
+            error,
+          );
+        });
+      }
+    } catch (error) {
+      logger.error(
+        `ユーザー ${userId} の音声受信の開始中にエラーが発生しました:`,
+        error,
+      );
+    }
   }
 }
 
