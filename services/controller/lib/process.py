@@ -5,7 +5,6 @@ from lib.data import Data
 from lib.llm import LLM
 from lib.logger import logger
 from lib.notification import Notification
-from lib.transcriber import Transcriber
 
 
 class Process:
@@ -17,17 +16,15 @@ class Process:
         interval (int): データ処理の間隔（秒単位）。
     """
 
-    def __init__(self, data: Data, notification: Notification, transcriber: Transcriber, interval: int = 10):
+    def __init__(self, data: Data, notification: Notification, interval: int = 10):
         """
         Args:
             data (Data): データ操作を行うための Data クラスのインスタンス。
             notification (Notification): 通知を送信するための Notification クラスのインスタンス。
-            transcriber (Transcriber): 文字起こしを行うための Transcriber インスタンス。
             interval (int, optional): データ処理の間隔（秒単位）。デフォルトは 10 秒。
         """
         self.data = data
         self.notification = notification
-        self.transcriber = transcriber
         self.interval = interval
         self._stop_event = threading.Event()
         self.llm = LLM()
@@ -42,7 +39,6 @@ class Process:
             folders = self.data.get_folders()
             for folder in folders:
                 try:
-                    error = False
                     # 通知を送信
                     message = make_content(folder, self.data, "議事録を作成しています...")
                     message_id = self.notification.send_notification(message)
@@ -50,14 +46,14 @@ class Process:
                     content = self.data.get_transcription(folder)
                     # LLMを使って要約を生成
                     summary = self.llm.generate_summary(content)
-                    error = summary == ""
-                    if error:
+                    success = summary != ""
+                    if not success:
                         summary = "要約の生成に失敗しました。"
                     # 通知を編集して要約を送信
                     message = make_content(folder, self.data, summary)
                     self.notification.edit_notification(message_id, message)
-                    # 処理が完了したファイルを削除
-                    if not error:
+                    if success:
+                        # 処理が完了したファイルを削除
                         self.data.delete_folder(folder)
                 except Exception as e:
                     logger.error(f"エラーが発生しました {folder}: {e}")

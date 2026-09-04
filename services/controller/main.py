@@ -29,7 +29,7 @@ def main():
         if not WEBHOOK_URL:
             raise ValueError("Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。")
         notification = Notification(WEBHOOK_URL)
-        process = Process(data, notification, transcriber, interval=INTERVAL)
+        process = Process(data, notification, interval=INTERVAL)
 
         def shutdown(signum, frame):
             process.stop()
