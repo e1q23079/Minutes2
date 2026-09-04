@@ -29,14 +29,7 @@ class AudioReceiver {
   public async start(): Promise<void> {
     this.isRunning = true;
     const receiver = this.connection.receiver;
-    receiver.speaking.on("start", async (userId) => {
-      this.handleUserAudioStream(userId).catch((error) => {
-        logger.error(
-          `ユーザー ${userId} の音声受信の開始中にエラーが発生しました:`,
-          error,
-        );
-      });
-    });
+    receiver.speaking.on("start", this.handleSpeakingStart);
   }
 
   /*
@@ -45,6 +38,7 @@ class AudioReceiver {
    */
   public async stop(): Promise<void> {
     this.isRunning = false;
+    this.connection.receiver.speaking.off("start", this.handleSpeakingStart);
     for (const [userId, audioStream] of this.activeUserStreams.entries()) {
       try {
         audioStream.destroy();
@@ -60,6 +54,19 @@ class AudioReceiver {
       logger.error("Writer の endLog() 中にエラーが発生しました:", error);
     });
   }
+
+  /*
+   * ユーザーの音声受信開始イベントを処理する関数
+   * @param userId ユーザーID
+   */
+  private handleSpeakingStart = (userId: string): void => {
+    this.handleUserAudioStream(userId).catch((error) => {
+      logger.error(
+        `ユーザー ${userId} の音声受信の開始中にエラーが発生しました:`,
+        error,
+      );
+    });
+  };
 
   /*
    * ユーザーの音声ストリームを処理する関数
