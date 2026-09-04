@@ -12,7 +12,7 @@ import { logger } from "../logger.js";
 import { getFileNameDate } from "./lib.js";
 import Writer from "./writer.js";
 
-const VC_WAIT_TIME = 5; // ボットが接続・切断するまでの待機時間（秒）
+const VC_WAIT_TIME = 60; // ボットが接続・切断するまでの待機時間（秒）
 
 /**
  * Discord Bot を管理するクラス
