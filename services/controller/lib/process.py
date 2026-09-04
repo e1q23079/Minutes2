@@ -44,6 +44,13 @@ class Process:
                     message_id = self.notification.send_notification(message)
                     # データを読み込み
                     content = self.data.get_transcription(folder)
+                    if content is None:
+                        # 音声ファイルが空の場合はフォルダーを削除して次のフォルダーへ
+                        self.data.delete_folder(folder)
+                        # 通知を編集して要約を送信
+                        message = make_content(folder, self.data, "音声ファイルが空のため、処理をスキップしました。")
+                        self.notification.edit_notification(message_id, message)
+                        continue
                     # LLMを使って要約を生成
                     summary = self.llm.generate_summary(content)
                     success = summary != ""
