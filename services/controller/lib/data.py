@@ -1,4 +1,9 @@
+import shutil
+from datetime import datetime
 from pathlib import Path
+
+from lib.logger import logger
+from lib.transcriber import Transcriber
 
 
 class Data:
@@ -8,53 +13,69 @@ class Data:
         path (Path): データファイルが格納されているディレクトリのパス。
     """
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, transcriber: Transcriber):
         """
         Args:
             path (Path): データファイルが格納されているディレクトリのパス。
+            transcriber (Transcriber): 文字起こしを行うためのTranscriberインスタンス。
         """
         self.path = path
+        self.transcriber = transcriber
 
-    def get_files(self):
+    def get_folders(self) -> list[Path]:
         """
-        指定されたディレクトリから、特定の条件を満たすファイルのリストを取得します。
+        指定されたディレクトリから、特定の条件を満たすフォルダーのリストを取得します。
         Returns:
-            list: 条件を満たすファイルのリスト。
+            list: 条件を満たすフォルダーのリスト。
         """
-        files = []
-        for file_path in self.path.glob("transcription_*.txt"):
-            with file_path.open("r", encoding="utf-8") as f:
-                content = f.read().strip()
-                if content.endswith("--- End of Transcription ---"):
-                    files.append(file_path)
-        return files
+        folders = []
+        for folder in sorted(self.path.iterdir()):
+            # フォルダーでなければスキップ
+            if not folder.is_dir():
+                continue
+            # フォルダー名：YYYY-MM-DD_HH-MM-SS の形式であることを確認
+            try:
+                datetime.strptime(folder.name, "%Y-%m-%d_%H-%M-%S")
+            except ValueError:
+                continue
+            # rec_end.dat が存在しない場合はスキップ
+            if not (folder / "rec_end.dat").is_file():
+                continue
+            folders.append(folder)
+        return folders
 
-    def get_transcription_name(self, file_path: Path) -> str:
+    def get_transcription_name(self, folder: Path) -> str:
         """
-        指定された議事録ファイルの名前を取得します。
+        指定されたフォルダーの名前を取得します。
         Args:
-            file_path (Path): 名前を取得するファイルのパス。
+            folder (Path): 名前を取得するフォルダーのパス。
         Returns:
-            str: ファイルの名前。
+            str: フォルダー名を返します。
         """
-        return file_path.stem.removeprefix("transcription_")
+        return folder.name
 
-    def read_file(self, file_path: Path):
+    def get_transcription(self, folder: Path) -> str:
         """
-        指定されたファイルの内容を読み取ります。
+        指定されたフォルダー内の音声ファイルを文字起こしし、結果を結合して返します。
         Args:
-            file_path (Path): 読み取るファイルのパス。
+            folder (Path): 文字起こしする音声ファイルが格納されているフォルダーのパス。
         Returns:
-            str: ファイルの内容。
+            str: 文字起こし結果を結合した文字列。
         """
-        with file_path.open("r", encoding="utf-8") as f:
-            return f.read()
+        logger.info(f"フォルダー {folder} の音声ファイルを文字起こししています。")
+        transcriptions = []
+        for file in sorted(folder.glob("rec_*.wav")):
+            transcription = self.transcriber.transcribe(file)
+            transcriptions.append(transcription)
+        text = "\n".join(transcriptions)
+        logger.info(f"フォルダー {folder} の文字起こしが完了しました。")
+        return text
 
-    def delete_file(self, file_path: Path):
+    def delete_folder(self, folder_path: Path) -> None:
         """
-        指定されたファイルを削除します。
+        指定されたフォルダーを削除します。
         Args:
-            file_path (Path): 削除するファイルのパス。
+            folder_path (Path): 削除するフォルダーのパス。
         """
-        if file_path.is_file():
-            file_path.unlink()
+        if folder_path.is_dir():
+            shutil.rmtree(folder_path)

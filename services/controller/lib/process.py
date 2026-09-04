@@ -36,23 +36,27 @@ class Process:
         """
         logger.info("管理プロセスを実行しています。")
         while not self._stop_event.is_set():
-            files = self.data.get_files()
-            for file in files:
+            folders = self.data.get_folders()
+            for folder in folders:
                 try:
-                    # データを読み込み
-                    content = self.data.read_file(file)
                     # 通知を送信
-                    message = make_content(file, self.data, "議事録を作成しています...")
+                    message = make_content(folder, self.data, "議事録を作成しています...")
                     message_id = self.notification.send_notification(message)
+                    # データを読み込み
+                    content = self.data.get_transcription(folder)
                     # LLMを使って要約を生成
                     summary = self.llm.generate_summary(content)
+                    success = summary != ""
+                    if not success:
+                        summary = "要約の生成に失敗しました。"
                     # 通知を編集して要約を送信
-                    message = make_content(file, self.data, summary)
+                    message = make_content(folder, self.data, summary)
                     self.notification.edit_notification(message_id, message)
-                    # 処理が完了したファイルを削除
-                    self.data.delete_file(file)
+                    if success:
+                        # 処理が完了したファイルを削除
+                        self.data.delete_folder(folder)
                 except Exception as e:
-                    logger.error(f"エラーが発生しました {file}: {e}")
+                    logger.error(f"エラーが発生しました {folder}: {e}")
             if self._stop_event.wait(self.interval):
                 break
 
