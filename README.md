@@ -16,8 +16,7 @@ Minutes は、Discord のボイスチャンネルで行われる会議や雑談�
 
 - Node.js / TypeScript
 - Discord.js
-- Hugging Face Transformers
-- Whisper (ONNX)
+- Whisper
 - Ollama（ローカル LLM 実行）
 - Docker / Docker Compose
 
