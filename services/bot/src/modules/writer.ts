@@ -1,6 +1,5 @@
 import { FileWriter } from "wav";
 import path from "path";
-import fs from "fs";
 import fsPromises from "fs/promises";
 import { getFileNameDate } from "./lib.js";
 import { logger } from "../logger.js";
@@ -22,21 +21,24 @@ export default class Writer {
    * @param userId ユーザーID
    * @returns { waveWriter: FileWriter, recFilePath: string }
    */
-  public createWavFileWriter(userId: string): {
+  public async createWavFileWriter(userId: string): Promise<{
     waveWriter: FileWriter;
     recFilePath: string;
-  } {
+  }> {
     const timestamp = getFileNameDate();
     const recFilePath = path.join(
       DATA_DIR,
       `${this.fileName}/rec_${timestamp}_${userId}.wav`,
     );
     const dir = path.dirname(recFilePath);
-    fs.mkdirSync(dir, { recursive: true });
+    await fsPromises.mkdir(dir, { recursive: true });
     const waveWriter = new FileWriter(recFilePath, {
       sampleRate: 48000,
       channels: 2,
       bitDepth: 16,
+    });
+    waveWriter.on("error", (err) => {
+      logger.error("WAVファイルの書き込み中にエラーが発生しました:", err);
     });
     return { waveWriter, recFilePath };
   }
@@ -54,6 +56,7 @@ export default class Writer {
         logger.info("空の音声ファイルを削除しました");
       }
     } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
       logger.error("ファイルの状態を確認中にエラーが発生しました", error);
     }
   }
@@ -65,7 +68,7 @@ export default class Writer {
   public async endLog() {
     const filePath = path.join(DATA_DIR, `${this.fileName}/rec_end.dat`);
     const dir = path.dirname(filePath);
-    fs.mkdirSync(dir, { recursive: true });
+    await fsPromises.mkdir(dir, { recursive: true });
     const logEntry = "\n--- End of Recording ---\n";
     try {
       await fsPromises.appendFile(filePath, logEntry, { encoding: "utf-8" });

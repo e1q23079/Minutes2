@@ -1,5 +1,6 @@
 import { EndBehaviorType, AudioReceiveStream } from "@discordjs/voice";
 import { pipeline } from "node:stream/promises";
+import { Writable } from "node:stream";
 import type { VoiceConnection } from "@discordjs/voice";
 import { Decoder } from "./decoder.js";
 import { logger } from "../logger.js";
@@ -49,7 +50,7 @@ class AudioReceiver {
         );
       }
     }
-
+    this.activeUserStreams.clear();
     await this.writer?.endLog().catch((error) => {
       logger.error("Writer の endLog() 中にエラーが発生しました:", error);
     });
@@ -97,7 +98,7 @@ class AudioReceiver {
       });
       this.activeUserStreams.set(userId, audioStream);
       const { waveWriter, recFilePath } =
-        this.writer.createWavFileWriter(userId);
+        await this.writer.createWavFileWriter(userId);
       const decoder = new Decoder();
       try {
         await pipeline(audioStream, decoder, waveWriter);
@@ -108,6 +109,14 @@ class AudioReceiver {
         );
       } finally {
         this.activeUserStreams.delete(userId);
+        await new Promise<void>((resolve) => {
+          if ((waveWriter as Writable).destroyed) {
+            resolve();
+            return;
+          }
+          waveWriter.once("done", () => resolve());
+          setTimeout(resolve, 5000); // 5秒後に強制的に解決
+        });
         await this.writer.cleanupAudioFile(recFilePath).catch((error) => {
           logger.error(
             `ユーザー ${userId} の音声ファイルのクリーンアップ中にエラーが発生しました:`,
