@@ -81,3 +81,15 @@ class Data:
         """
         if folder_path.is_dir():
             shutil.rmtree(folder_path)
+        logger.info(f"フォルダー {folder_path} を削除しました。")
+
+    def delete_end_dat(self, folder_path: Path) -> None:
+        """
+        指定されたフォルダー内の rec_end.dat ファイルを削除します。
+        Args:
+            folder_path (Path): rec_end.dat ファイルを削除するフォルダーのパス。
+        """
+        end_dat_path = folder_path / "rec_end.dat"
+        if end_dat_path.is_file():
+            end_dat_path.unlink()
+        logger.info(f"フォルダー {folder_path} 内の rec_end.dat ファイルを削除しました。")

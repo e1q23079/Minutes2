@@ -56,6 +56,8 @@ class Process:
                     success = summary != ""
                     if not success:
                         summary = "要約の生成に失敗しました。"
+                        # end_dat ファイルを削除して次のフォルダーへ
+                        self.data.delete_end_dat(folder)
                     # 通知を編集して要約を送信
                     message = make_content(folder, self.data, summary)
                     self.notification.edit_notification(message_id, message)
