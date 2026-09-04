@@ -42,6 +42,7 @@ class Process:
             folders = self.data.get_folders()
             for folder in folders:
                 try:
+                    error = False
                     # 通知を送信
                     message = make_content(folder, self.data, "議事録を作成しています...")
                     message_id = self.notification.send_notification(message)
@@ -49,11 +50,15 @@ class Process:
                     content = self.data.get_transcription(folder)
                     # LLMを使って要約を生成
                     summary = self.llm.generate_summary(content)
+                    error = summary == ""
+                    if error:
+                        summary = "要約の生成に失敗しました。"
                     # 通知を編集して要約を送信
                     message = make_content(folder, self.data, summary)
                     self.notification.edit_notification(message_id, message)
                     # 処理が完了したファイルを削除
-                    self.data.delete_folder(folder)
+                    if not error:
+                        self.data.delete_folder(folder)
                 except Exception as e:
                     logger.error(f"エラーが発生しました {folder}: {e}")
             if self._stop_event.wait(self.interval):
