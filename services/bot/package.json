@@ -19,6 +19,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.4.0",
+    "@types/wav": "^1.0.4",
     "eslint": "^10.9.1",
     "prettier": "^3.9.6",
     "tsx": "^4.23.12",
@@ -29,10 +30,10 @@
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.19.2",
-    "@huggingface/transformers": "^4.2.0",
     "discord.js": "^14.27.0",
     "dotenv": "^17.4.2",
     "tslog": "^5.1.0",
+    "wav": "^1.0.2",
     "wave-resampler": "^1.0.0"
   }
 }

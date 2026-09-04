@@ -1,8 +1,8 @@
 /*
- * ファイルを保存する際のファイル名を生成する関数
+ * @description 日付を元にファイル名を生成する関数
  * @return {string} 生成されたファイル名
  */
-const getFileName = (): string => {
+const getFileNameDate = (): string => {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -13,4 +13,4 @@ const getFileName = (): string => {
   return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
 };
 
-export { getFileName };
+export { getFileNameDate };
