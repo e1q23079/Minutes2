@@ -8,6 +8,7 @@ from lib.data import Data
 from lib.logger import logger
 from lib.notification import Notification
 from lib.process import Process
+from lib.transcriber import Transcriber
 
 load_dotenv()
 
@@ -23,11 +24,12 @@ def main():
     """
 
     try:
-        data = Data(Path(FILE_PATH))
+        transcriber = Transcriber()
+        data = Data(Path(FILE_PATH), transcriber)
         if not WEBHOOK_URL:
             raise ValueError("Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。")
         notification = Notification(WEBHOOK_URL)
-        process = Process(data, notification, interval=INTERVAL)
+        process = Process(data, notification, transcriber, interval=INTERVAL)
 
         def shutdown(signum, frame):
             process.stop()
