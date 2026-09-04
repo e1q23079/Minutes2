@@ -54,13 +54,13 @@ class Data:
         """
         return folder.name
 
-    def get_transcription(self, folder: Path) -> str:
+    def get_transcription(self, folder: Path) -> str | None:
         """
         指定されたフォルダー内の音声ファイルを文字起こしし、結果を結合して返します。
         Args:
             folder (Path): 文字起こしする音声ファイルが格納されているフォルダーのパス。
         Returns:
-            str: 文字起こし結果を結合した文字列。
+            str | None: 文字起こし結果を結合した文字列を返します。文字起こし結果が空の場合は None を返します。
         """
         logger.info(f"フォルダー {folder} の音声ファイルを文字起こししています。")
         transcriptions = []
@@ -69,6 +69,8 @@ class Data:
             transcriptions.append(transcription)
         text = "\n".join(transcriptions)
         logger.info(f"フォルダー {folder} の文字起こしが完了しました。")
+        if not text.strip():
+            return None
         return text
 
     def delete_folder(self, folder_path: Path) -> None:
