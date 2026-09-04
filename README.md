@@ -1,22 +1,22 @@
-# Voxnote
+# Minutes
 
-Voxnote は、Discord のボイスチャンネルで行われる会議や雑談を自動で文字起こしし、議事録として保存するための Bot です。
+Minutes は、Discord のボイスチャンネルで行われる会議や雑談を自動で文字起こしし、議事録として保存するための Bot です。
 
 ## 主な機能
 
 - 指定した Discord ボイスチャンネルを監視
 - ボイスチャンネルへの参加・退出を自動検知
-- 音声を文字起こししてテキスト化
-- 文字起こし結果を `.txt` ファイルとして保存
-- 議事録内容を Webhook で外部サービスに通知
+- 録音データを Whisper で日本語に文字起こし
+- 文字起こし結果を Ollama の LLM で議事録に要約
+- 議事録の作成状況と結果を Webhook で通知
+- 処理済みの録音データを自動削除
 - Docker とローカル開発の両方で起動可能
 
 ## 技術スタック
 
 - Node.js / TypeScript
 - Discord.js
-- Hugging Face Transformers
-- Whisper (ONNX)
+- Whisper
 - Ollama（ローカル LLM 実行）
 - Docker / Docker Compose
 
@@ -24,7 +24,7 @@ Voxnote は、Discord のボイスチャンネルで行われる会議や雑談�
 
 - Node.js 20 以上
 - npm
-- Python 3.9 以上（Controller 用）
+- Python 3.12 以上（Controller 用、Docker 利用時）
 - Discord Bot の API トークン
 - 対象の Discord ボイスチャンネル ID
 - Webhook URL（議事録送信先）
@@ -57,7 +57,7 @@ WEBHOOK_URL=<YOUR_WEBHOOK_URL>
 
 ### ローカル LLM（Ollama）の環境
 
-ローカル開発時は Ollama を使って生成系の処理を実行する場合があります。まず、Ollama のサーバーを起動してからモデルを pull して利用します。
+ローカル開発時は Ollama を使って議事録の要約を生成します。`gemma2:2b` モデルを使用するため、事前に Ollama のサーバーを起動してモデルを pull してください。
 
 ターミナル 1 でサーバーを起動:
 
@@ -73,7 +73,7 @@ ollama list
 ollama run gemma2:2b
 ```
 
-この例では `gemma2:2b` を使用し、ローカル環境で会話確認や生成処理の動作確認を行えます。`ollama serve` はバックグラウンドでローカル API を提供するため、モデルの実行前に別ターミナルで起動しておくのが基本です。
+Controller は `gemma2:2b` に接続して、文字起こし結果から日本語の議事録を生成します。`ollama serve` を起動したまま Controller を実行してください。
 
 ## ローカル開発での起動
 
@@ -124,13 +124,17 @@ docker compose down
 
 ## 保存先
 
-文字起こし結果は次の形式で保存されます。
+録音中は、セッションごとに次の形式のフォルダーへ WAV ファイルが保存されます。
 
 ```text
-services/bot/data/transcription_YYYY-MM-DD_HH-MM-SS.txt
+services/data/YYYY-MM-DD_HH-MM-SS/rec_YYYY-MM-DD_HH-MM-SS_<USER_ID>.wav
 ```
 
-また、コンテナ実行時は `DATA_DIR=/data` の設定により `/data` 配下に保存されます。
+録音終了時に同じフォルダーへ `rec_end.dat` が作成されると、Controller が処理を開始します。Controller はフォルダー内の WAV ファイルを文字起こしし、LLM で議事録を生成して Webhook に通知します。
+
+処理が成功した場合、または音声ファイルが空で処理をスキップした場合は、対象フォルダーを削除します。要約の生成に失敗した場合はデータを削除せず、残します。
+
+コンテナ実行時は Bot と Controller がホストの `./services/data` をコンテナ内の `/data` として共有します。
 
 ## 基本的な使い方
 
@@ -139,8 +143,9 @@ services/bot/data/transcription_YYYY-MM-DD_HH-MM-SS.txt
 3. Webhook URL を用意する（Slack, Discord, または独自サーバー）
 4. Bot と Controller をそれぞれ起動する
 5. 会話中のチャンネルにユーザーが参加すると文字起こしが開始される
-6. 会話終了時にテキストログがファイルに保存される
-7. Controller が自動的に文字起こし結果を Webhook 経由で送信する
+6. 会話終了時に録音フォルダーへ終了マーカーが作成される
+7. Controller が文字起こしと議事録生成を行い、結果を Webhook 経由で送信する
+8. 処理が成功した録音フォルダーが削除される
 
 ## 注意事項
 

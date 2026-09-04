@@ -3,7 +3,7 @@ services:
     build:
       context: ./services/bot
       dockerfile: Dockerfile
-    container_name: voxnote-bot
+    container_name: minutes-bot
     environment:
       - API_KEY=${API_KEY}
       - VOICE_CHANNEL_ID=${VOICE_CHANNEL_ID}
@@ -19,7 +19,7 @@ services:
     build:
       context: ./services/controller
       dockerfile: Dockerfile
-    container_name: voxnote-controller
+    container_name: minutes-controller
     environment:
       - WEBHOOK_URL=${WEBHOOK_URL}
       - DATA_DIR=/data
@@ -36,7 +36,7 @@ services:
     build:
       context: ./services/llm
       dockerfile: Dockerfile
-    container_name: voxnote-llm
+    container_name: minutes-llm
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 5s

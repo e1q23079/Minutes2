@@ -8,9 +8,8 @@ import {
 } from "./channel.js";
 import type { VoiceBasedChannel } from "discord.js";
 import { AudioReceiver } from "./audio.js";
-import Transcriber from "./transcriber.js";
 import { logger } from "../logger.js";
-import { getFileName } from "./lib.js";
+import { getFileNameDate } from "./lib.js";
 import Writer from "./writer.js";
 
 const VC_WAIT_TIME = 60; // ボットが接続・切断するまでの待機時間（秒）
@@ -50,7 +49,7 @@ export default class Bot {
    * @returns Promise<void>
    */
   public async start(): Promise<void> {
-    await Transcriber.initialize(); // Transcriber の初期化を行う
+    // await Transcriber.initialize(); // Transcriber の初期化を行う
 
     this.client.on(Events.Error, (error) => {
       logger.error("Discord Bot でエラーが発生しました:", error);
@@ -164,9 +163,10 @@ export default class Bot {
         const connection = await this.connection?.connect();
         if (!connection) {
           logger.error("ボイスチャンネルへの接続に失敗しました。");
+          this.botStatus = false;
+          this.botPrevStatus = false;
           return;
         }
-        this.botPrevStatus = this.botStatus;
         if (this.audioReceiver) {
           await this.audioReceiver.stop().catch((error) => {
             logger.error(
@@ -176,20 +176,27 @@ export default class Bot {
           });
           this.audioReceiver = null;
         }
-        this.writer = new Writer(getFileName());
+        this.writer = new Writer(getFileNameDate());
         this.audioReceiver = new AudioReceiver(connection, this.writer);
         await this.connection?.playAnnounce();
-        logger.info("文字起こしを開始します。");
+        logger.info("録音を開始します。");
         if (!this.isDestroyed) {
           await this.audioReceiver?.start();
         }
+        this.botPrevStatus = true;
       } else {
-        this.botPrevStatus = this.botStatus;
-        await this.audioReceiver?.stop();
-        this.audioReceiver = null;
+        if (this.audioReceiver) {
+          await this.audioReceiver?.stop().catch((error) => {
+            logger.error(
+              "AudioReceiver の停止中にエラーが発生しました:",
+              error,
+            );
+          });
+          this.audioReceiver = null;
+        }
         this.connection?.disconnect();
-        this.audioReceiver = null;
         this.writer = null;
+        this.botPrevStatus = false;
       }
     } catch (error) {
       logger.error("ボイスチャンネルでの処理中にエラーが発生しました:", error);
@@ -223,7 +230,12 @@ export default class Bot {
     }
     this.processTimer = setTimeout(() => {
       this.processTimer = null;
-      this.VCProcess();
+      this.VCProcess().catch((error) => {
+        logger.error(
+          "ボイスチャンネルでの処理中にエラーが発生しました:",
+          error,
+        );
+      });
     }, VC_WAIT_TIME * 1000);
   }
 }
