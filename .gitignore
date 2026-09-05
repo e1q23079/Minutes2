@@ -12,6 +12,7 @@ dist/
 # recording
 rec_*.wav
 rec_*.dat
+transcription.txt
 
 # .venv
 .venv/

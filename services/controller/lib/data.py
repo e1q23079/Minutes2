@@ -76,6 +76,9 @@ class Data:
             transcriptions.append(transcription)
         text = "\n".join(transcriptions)
         logger.info(f"フォルダー {folder} の文字起こしが完了しました。")
+        # 文字起こし結果を transcription.txt に書き込む
+        self._write_transcription(folder, text)
+        logger.info(f"フォルダー {folder} の文字起こし結果を transcription.txt に書き込みました。")
         if not text.strip():
             return None
         return text
@@ -100,3 +103,17 @@ class Data:
         if end_dat_path.is_file():
             end_dat_path.unlink()
         logger.info(f"フォルダー {folder_path} 内の rec_end.dat ファイルを削除しました。")
+
+    def _write_transcription(self, folder_path: Path, content: str) -> None:
+        """
+        指定されたフォルダー内の transcription.txt ファイルに内容を書き込みます。
+        Args:
+            folder (Path): transcription.txt ファイルを書き込むフォルダーのパス。
+            content (str): 書き込む内容。
+        """
+        file_path = folder_path / "transcription.txt"
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(f"{content}\n")
+        except Exception as e:
+            logger.error(f"ファイルの書き込みに失敗しました: {file_path}. エラー: {e}")
