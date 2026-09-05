@@ -46,13 +46,20 @@ class Data:
 
     def get_transcription_name(self, folder: Path) -> str:
         """
-        指定されたフォルダーの名前を取得します。
+        議事録の名前を取得します。
         Args:
             folder (Path): 名前を取得するフォルダーのパス。
         Returns:
-            str: フォルダー名を返します。
+            str: 議事録の名前。
         """
-        return folder.name
+        try:
+            date = datetime.strptime(folder.name, "%Y-%m-%d_%H-%M-%S")
+            date_text = date.strftime("%Y-%m-%d %H:%M:%S")
+            transcription_name = f"【議事録】 {date_text}"
+            return transcription_name
+        except ValueError:
+            logger.error(f"フォルダー名の形式が不正です: {folder.name}")
+            return "【議事録】 不明"
 
     def get_transcription(self, folder: Path) -> str | None:
         """
