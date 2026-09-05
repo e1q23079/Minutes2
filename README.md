@@ -136,6 +136,39 @@ services/data/YYYY-MM-DD_HH-MM-SS/rec_YYYY-MM-DD_HH-MM-SS_<USER_ID>.wav
 
 コンテナ実行時は Bot と Controller がホストの `./services/data` をコンテナ内の `/data` として共有します。
 
+### 要約に失敗した場合のリトライ
+
+要約の生成に失敗した場合、対象の録音フォルダーは削除されずに残ります。対象フォルダーを確認し、`rec_end.dat` を作成すると Controller が再度処理します。
+
+```bash
+cd services/data
+ls
+cd 2026-09-01_00-00-00
+touch rec_end.dat
+```
+
+`2026-09-01_00-00-00` の部分は、リトライしたい録音フォルダー名に置き換えてください。
+
+### 稼働状況とログの確認
+
+コンテナが起動しているか確認するには、次のコマンドを実行します。
+
+```bash
+docker ps
+```
+
+一覧に `minutes-bot`、`minutes-controller`、`minutes-llm` が表示されていれば、それぞれのコンテナが起動しています。表示されないコンテナや停止したコンテナの状態を確認する場合は、`docker ps -a` を使用してください。
+
+各サービスのログをリアルタイムで確認するには、サービスごとに次のコマンドを実行します。
+
+```bash
+docker logs -f minutes-bot
+docker logs -f minutes-controller
+docker logs -f minutes-llm
+```
+
+`-f` はログを継続的に表示するオプションです。ログの表示を終了するには `Ctrl+C` を押してください。
+
 ## 基本的な使い方
 
 1. Discord Bot を作成し、対象サーバーに招待する
