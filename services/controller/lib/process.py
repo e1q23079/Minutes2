@@ -60,7 +60,7 @@ class Process:
                         self.data.delete_end_dat(folder)
                     # 通知を編集して要約を送信
                     message = make_content(folder, self.data, summary)
-                    self.notification.edit_notification(message_id, message)
+                    self.notification.edit_notification(message_id, f"{message}\n> ※ この議事録はAIによって生成されました。内容に誤りが含まれる場合があります。")
                     if success:
                         # 処理が完了したファイルを削除
                         self.data.delete_folder(folder)
