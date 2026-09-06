@@ -1,6 +1,9 @@
 import re
 
-from deep_translator import GoogleTranslator as Translator
+import argostranslate.package
+import argostranslate.translate
+
+from lib.logger import logger
 
 
 class Lib:
@@ -40,6 +43,32 @@ class Lib:
         return bool(jp_pattern)
 
     @staticmethod
+    def install_translation_model() -> bool:
+        """
+        Argos Translateの翻訳モデルをインストールする
+        """
+        try:
+            installed_languages = argostranslate.translate.get_installed_languages()
+            for language in installed_languages:
+                if language.code == "en":
+                    for translation in language.translations_from:
+                        if translation.to_lang.code == "ja":
+                            logger.info("翻訳モデルはすでにインストールされています")
+                            return True
+
+            argostranslate.package.update_package_index()
+            packages = argostranslate.package.get_available_packages()
+            for package in packages:
+                if package.from_code == "en" and package.to_code == "ja":
+                    argostranslate.package.install_from_path(package.download())
+                    logger.info("翻訳モデルのインストールに成功しました")
+                    return True
+            logger.warning("翻訳モデルが見つかりませんでした")
+        except Exception as e:
+            logger.error(f"翻訳モデルのインストールに失敗しました: {e}")
+        return False
+
+    @staticmethod
     def translate_text_en2jp(text: str) -> str:
         """
         英語のテキストを日本語に翻訳する
@@ -54,8 +83,7 @@ class Lib:
             return text
 
         try:
-            translator = Translator(source="en", target="ja")
-            translated_text = translator.translate(text)
+            translated_text = argostranslate.translate.translate(text, "en", "ja")
             return translated_text
         except Exception as e:
             # 翻訳に失敗した場合は元のテキストを返す

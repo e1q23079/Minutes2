@@ -1,12 +1,20 @@
 import unittest
 
 from lib.lib import Lib
+from lib.logger import logger
 
 
 class TestLib(unittest.TestCase):
     """
     ライブラリのテストクラス
     """
+
+    def setUp(self):
+        """
+        テストのセットアップ
+        """
+        logger.setLevel("CRITICAL")  # テスト中のログ出力を抑制するためにログレベルを変更
+        Lib.install_translation_model()
 
     def test_is_over_text_len_over(self):
         """

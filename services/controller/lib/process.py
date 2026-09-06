@@ -29,6 +29,7 @@ class Process:
         self.interval = interval
         self._stop_event = threading.Event()
         self.llm = LLM()
+        Lib.install_translation_model()  # 翻訳モデルのインストールを行う
 
     def _processing(self):
         """
