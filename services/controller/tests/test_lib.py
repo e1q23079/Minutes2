@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from lib.lib import Lib
 
@@ -78,17 +79,22 @@ class TestLib(unittest.TestCase):
         result = Lib.is_text_jp("これはテストです。This is a test.")
         self.assertTrue(result)
 
-    def test_translate_text_en2jp(self):
+    @patch("lib.lib.ollama.chat")
+    def test_translate_text_en2jp(self, mock_chat):
         """
         translate_text_en2jp関数のテスト（英語のテキストを日本語に翻訳する場合）
         """
-        # 単一行
+        mock_chat.return_value = {"message": {"content": "これはテストです。"}}
         result = Lib.translate_text_en2jp("This is a test.")
         self.assertIsInstance(result, str)
         self.assertNotEqual(result, "")
-        # 複数行
-        text = "This is a test.\nThis is another test."
-        result = Lib.translate_text_en2jp(text)
-        self.assertIsInstance(result, str)
-        self.assertNotEqual(result, "")
-        self.assertIn("\n", result)
+        self.assertEqual(result, "これはテストです。")
+
+    @patch("lib.lib.ollama.chat")
+    def test_translate_text_en2jp_exception(self, mock_chat):
+        """
+        translate_text_en2jp関数のテスト（翻訳中に例外が発生する場合）
+        """
+        mock_chat.side_effect = Exception("翻訳中にエラーが発生しました。")
+        result = Lib.translate_text_en2jp("This is a test.")
+        self.assertEqual(result, "This is a test.")
