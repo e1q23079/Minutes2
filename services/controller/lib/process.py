@@ -67,7 +67,7 @@ class Process:
                     # 通知を編集して要約を送信
                     message = make_content(folder, self.data, summary)
                     if not self.notification.edit_notification(message_id, f"{message}\n> ※ この議事録はAIによって生成されました。内容に誤りが含まれる場合があります。"):
-                        summary = "要約の生成に失敗しました。"
+                        summary = "文字数制限を超えたため、議事録を送信できませんでした。"
                         success = False
                         message = make_content(folder, self.data, summary)
                         self.notification.edit_notification(message_id, message)
