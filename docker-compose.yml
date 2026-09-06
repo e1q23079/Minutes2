@@ -10,7 +10,7 @@ services:
       - DATA_DIR=/data
       - TZ=Asia/Tokyo
     volumes:
-      - ./services/data:/data
+      - ./data:/data
     depends_on:
       ollama:
         condition: service_healthy
@@ -25,7 +25,7 @@ services:
       - DATA_DIR=/data
       - OLLAMA_HOST=http://ollama:11434
     volumes:
-      - ./services/data:/data
+      - ./data:/data
     depends_on:
       ollama:
         condition: service_healthy
