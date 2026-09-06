@@ -117,3 +117,18 @@ class Data:
                 f.write(f"{content}\n")
         except Exception as e:
             logger.error(f"ファイルの書き込みに失敗しました: {file_path}. エラー: {e}")
+
+    def _write_summary(self, folder_path: Path, content: str, attempt: int) -> None:
+        """
+        指定されたフォルダー内の summary_*.txt ファイルに内容を書き込みます。
+        Args:
+            folder (Path): summary_*.txt ファイルを書き込むフォルダーのパス。
+            content (str): 書き込む内容。
+            attempt (int): 要約生成の試行回数（1 または 2）。
+        """
+        file_path = folder_path / f"summary_{attempt}.txt"
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(f"{content}\n")
+        except Exception as e:
+            logger.error(f"ファイルの書き込みに失敗しました: {file_path}. エラー: {e}")

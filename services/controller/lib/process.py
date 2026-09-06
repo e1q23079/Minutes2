@@ -58,7 +58,11 @@ class Process:
                     count = 2
                     while count > 0:  # 最大2回まで要約生成を試みる
                         summary = self.llm.generate_summary(content)
-                        if summary != "" and Lib.is_text_jp(summary):
+                        self.data._write_summary(folder, summary, 3 - count)
+                        if summary != "":
+                            if not Lib.is_text_jp(summary):
+                                summary = Lib.translate_text_en2jp(summary)
+                                self.data._write_summary(folder, summary, 0)
                             break
                         count -= 1
                     success = count > 0

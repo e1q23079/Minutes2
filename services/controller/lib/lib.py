@@ -1,5 +1,7 @@
 import re
 
+from deep_translator import GoogleTranslator as Translator
+
 
 class Lib:
     """
@@ -36,3 +38,26 @@ class Lib:
         # ひらがな・カタカナの文字が含まれているかどうかを正規表現で判定
         jp_pattern = re.search(r"[ぁ-んァ-ヴー]+", text)
         return bool(jp_pattern)
+
+    @staticmethod
+    def translate_text_en2jp(text: str) -> str:
+        """
+        英語のテキストを日本語に翻訳する
+
+        Args:
+            text (str): 翻訳する英語のテキスト
+
+        Returns:
+            str: 翻訳された日本語のテキスト
+        """
+        if not text or not text.strip():
+            return text
+
+        try:
+            translator = Translator(source="en", target="ja")
+            translated_text = translator.translate(text)
+            return translated_text
+        except Exception as e:
+            # 翻訳に失敗した場合は元のテキストを返す
+            print(f"翻訳に失敗しました: {e}")
+            return text
