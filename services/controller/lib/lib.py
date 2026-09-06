@@ -1,6 +1,8 @@
 import re
 
-from deep_translator import GoogleTranslator as Translator
+import ollama
+
+from lib.logger import logger
 
 
 class Lib:
@@ -50,14 +52,25 @@ class Lib:
         Returns:
             str: 翻訳された日本語のテキスト
         """
-        if not text or not text.strip():
-            return text
-
         try:
-            translator = Translator(source="en", target="ja")
-            translated_text = translator.translate(text)
-            return translated_text
+            logger.info("翻訳を開始します。")
+            response = ollama.chat(
+                model="gemma2:2b",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "あなたは英語から日本語への翻訳アシスタントです。\n"
+                            "入力された英語の文章を、自然で正確な日本語に翻訳してください。\n"
+                            "要約したり、原文にない情報を追加したりしないでください。\n"
+                            "翻訳結果のみを出力してください。\n"
+                        ),
+                    },
+                    {"role": "user", "content": text},
+                ],
+            )
+            logger.info("翻訳が完了しました。")
+            return response["message"]["content"]
         except Exception as e:
-            # 翻訳に失敗した場合は元のテキストを返す
-            print(f"翻訳に失敗しました: {e}")
-            return text
+            logger.error(f"翻訳中にエラーが発生しました: {e}")
+            return text  # エラーが発生した場合は元のテキストを返す
