@@ -42,7 +42,7 @@ class Lib:
         return bool(jp_pattern)
 
     @staticmethod
-    async def translate_text_en2jp(text: str) -> str:
+    def translate_text_en2jp(text: str) -> str:
         """
         英語のテキストを日本語に翻訳する
 
@@ -58,6 +58,6 @@ class Lib:
             if not line.strip():
                 translated_lines.append("")
                 continue
-            translated_line = await Lib.translator.translate(line, src="en", dest="ja")
+            translated_line = Lib.translator.translate(line, src="en", dest="ja")
             translated_lines.append(translated_line.text)
         return "\n".join(translated_lines)
