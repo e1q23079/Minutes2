@@ -77,3 +77,16 @@ class TestLib(unittest.TestCase):
         """
         result = Lib.is_text_jp("これはテストです。This is a test.")
         self.assertTrue(result)
+
+    def test_translate_text_en2jp(self):
+        """
+        translate_text_en2jp関数のテスト（英語のテキストを日本語に翻訳する場合）
+        """
+        import asyncio
+
+        async def run_test():
+            result = await Lib.translate_text_en2jp("This is a test.")
+            self.assertIsInstance(result, str)
+            self.assertNotEqual(result, "")
+
+        asyncio.run(run_test())
