@@ -52,5 +52,12 @@ class Lib:
         Returns:
             str: 翻訳された日本語のテキスト
         """
-        translated = await Lib.translator.translate(text, src="en", dest="ja")
-        return translated.text
+        lines = text.splitlines()
+        translated_lines = []
+        for line in lines:
+            if not line.strip():
+                translated_lines.append("")
+                continue
+            translated_line = await Lib.translator.translate(line, src="en", dest="ja")
+            translated_lines.append(translated_line.text)
+        return "\n".join(translated_lines)

@@ -85,8 +85,15 @@ class TestLib(unittest.TestCase):
         import asyncio
 
         async def run_test():
+            # 単一行
             result = await Lib.translate_text_en2jp("This is a test.")
             self.assertIsInstance(result, str)
             self.assertNotEqual(result, "")
+            # 複数行
+            text = "This is a test.\nThis is another test."
+            result = await Lib.translate_text_en2jp(text)
+            self.assertIsInstance(result, str)
+            self.assertNotEqual(result, "")
+            self.assertIn("\n", result)
 
         asyncio.run(run_test())
