@@ -2,6 +2,7 @@ import threading
 
 from lib.content import make_content
 from lib.data import Data
+from lib.lib import Lib
 from lib.llm import LLM
 from lib.logger import logger
 from lib.notification import Notification
@@ -54,8 +55,13 @@ class Process:
                         self.notification.edit_notification(message_id, message)
                         continue
                     # LLMを使って要約を生成
-                    summary = self.llm.generate_summary(content)
-                    success = summary != ""
+                    count = 2
+                    while count > 0:  # 最大2回まで要約生成を試みる
+                        summary = self.llm.generate_summary(content)
+                        if summary != "" and Lib.is_text_jp(summary):
+                            break
+                        count -= 1
+                    success = count > 0
                     if not success:
                         summary = "要約の生成に失敗しました。"
                     # 通知を編集して要約を送信
