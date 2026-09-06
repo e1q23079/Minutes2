@@ -42,6 +42,8 @@ class Process:
                     # 通知を送信
                     message = make_content(folder, self.data, "議事録を作成しています...")
                     message_id = self.notification.send_notification(message)
+                    if message_id is None:
+                        continue
                     # データを読み込み
                     content = self.data.get_transcription(folder)
                     if content is None:
@@ -56,14 +58,20 @@ class Process:
                     success = summary != ""
                     if not success:
                         summary = "要約の生成に失敗しました。"
-                        # end_dat ファイルを削除して次のフォルダーへ
-                        self.data.delete_end_dat(folder)
                     # 通知を編集して要約を送信
                     message = make_content(folder, self.data, summary)
-                    self.notification.edit_notification(message_id, f"{message}\n> ※ この議事録はAIによって生成されました。内容に誤りが含まれる場合があります。")
+                    if not self.notification.edit_notification(message_id, f"{message}\n> ※ この議事録はAIによって生成されました。内容に誤りが含まれる場合があります。"):
+                        summary = "要約の生成に失敗しました。"
+                        success = False
+                        message = make_content(folder, self.data, summary)
+                        self.notification.edit_notification(message_id, message)
                     if success:
                         # 処理が完了したファイルを削除
                         self.data.delete_folder(folder)
+                    else:
+                        # end_dat ファイルを削除して次のフォルダーへ
+                        self.data.delete_end_dat(folder)
+                        logger.error(f"要約の生成に失敗しました: {folder}")
                 except Exception as e:
                     logger.error(f"エラーが発生しました {folder}: {e}")
             if self._stop_event.wait(self.interval):
