@@ -1,14 +1,12 @@
 import re
 
-from googletrans import Translator
+from deep_translator import GoogleTranslator as Translator
 
 
 class Lib:
     """
     ライブラリクラス
     """
-
-    translator = Translator()
 
     @staticmethod
     def is_over_text_len(text: str, max_len: int) -> bool:
@@ -42,7 +40,7 @@ class Lib:
         return bool(jp_pattern)
 
     @staticmethod
-    async def translate_text_en2jp(text: str) -> str:
+    def translate_text_en2jp(text: str) -> str:
         """
         英語のテキストを日本語に翻訳する
 
@@ -52,12 +50,14 @@ class Lib:
         Returns:
             str: 翻訳された日本語のテキスト
         """
-        lines = text.splitlines()
-        translated_lines = []
-        for line in lines:
-            if not line.strip():
-                translated_lines.append("")
-                continue
-            translated_line = await Lib.translator.translate(line, src="en", dest="ja")
-            translated_lines.append(translated_line.text)
-        return "\n".join(translated_lines)
+        if not text or not text.strip():
+            return text
+
+        try:
+            translator = Translator(source="en", target="ja")
+            translated_text = translator.translate(text)
+            return translated_text
+        except Exception as e:
+            # 翻訳に失敗した場合は元のテキストを返す
+            print(f"翻訳に失敗しました: {e}")
+            return text

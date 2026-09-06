@@ -1,4 +1,3 @@
-import asyncio
 import threading
 
 from lib.content import make_content
@@ -31,7 +30,7 @@ class Process:
         self._stop_event = threading.Event()
         self.llm = LLM()
 
-    async def _processing(self):
+    def _processing(self):
         """
         データ処理と通知のメインループ。
         指定された間隔でデータを取得し、通知を送信し、処理が完了したファイルを削除します。
@@ -62,7 +61,8 @@ class Process:
                         self.data._write_summary(folder, summary, 3 - count)
                         if summary != "":
                             if not Lib.is_text_jp(summary):
-                                summary = await Lib.translate_text_en2jp(summary)
+                                summary = Lib.translate_text_en2jp(summary)
+                                self.data._write_summary(folder, summary, 0)
                             break
                         count -= 1
                     success = count > 0
@@ -92,7 +92,7 @@ class Process:
         プロセスを開始します。
         """
         logger.info("管理プロセスを開始します。")
-        asyncio.run(self._processing())
+        self._processing()
 
     def stop(self):
         """
