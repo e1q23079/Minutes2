@@ -2,6 +2,7 @@ import threading
 
 from lib.content import make_content
 from lib.data import Data
+from lib.lib import Lib
 from lib.llm import LLM
 from lib.logger import logger
 from lib.notification import Notification
@@ -42,6 +43,8 @@ class Process:
                     # 通知を送信
                     message = make_content(folder, self.data, "議事録を作成しています...")
                     message_id = self.notification.send_notification(message)
+                    if message_id is None:
+                        continue
                     # データを読み込み
                     content = self.data.get_transcription(folder)
                     if content is None:
@@ -52,18 +55,29 @@ class Process:
                         self.notification.edit_notification(message_id, message)
                         continue
                     # LLMを使って要約を生成
-                    summary = self.llm.generate_summary(content)
-                    success = summary != ""
+                    count = 2
+                    while count > 0:  # 最大2回まで要約生成を試みる
+                        summary = self.llm.generate_summary(content)
+                        if summary != "" and Lib.is_text_jp(summary):
+                            break
+                        count -= 1
+                    success = count > 0
                     if not success:
                         summary = "要約の生成に失敗しました。"
-                        # end_dat ファイルを削除して次のフォルダーへ
-                        self.data.delete_end_dat(folder)
                     # 通知を編集して要約を送信
                     message = make_content(folder, self.data, summary)
-                    self.notification.edit_notification(message_id, f"{message}\n> ※ この議事録はAIによって生成されました。内容に誤りが含まれる場合があります。")
+                    if not self.notification.edit_notification(message_id, f"{message}\n> ※ この議事録はAIによって生成されました。内容に誤りが含まれる場合があります。"):
+                        summary = "文字数制限を超えたため、議事録を送信できませんでした。"
+                        success = False
+                        message = make_content(folder, self.data, summary)
+                        self.notification.edit_notification(message_id, message)
                     if success:
                         # 処理が完了したファイルを削除
                         self.data.delete_folder(folder)
+                    else:
+                        # end_dat ファイルを削除して次のフォルダーへ
+                        self.data.delete_end_dat(folder)
+                        logger.error(f"要約の生成に失敗しました: {folder}")
                 except Exception as e:
                     logger.error(f"エラーが発生しました {folder}: {e}")
             if self._stop_event.wait(self.interval):

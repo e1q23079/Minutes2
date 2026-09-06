@@ -134,14 +134,14 @@ services/data/YYYY-MM-DD_HH-MM-SS/rec_YYYY-MM-DD_HH-MM-SS_<USER_ID>.wav
 
 処理が成功した場合、または音声ファイルが空で処理をスキップした場合は、対象フォルダーを削除します。要約の生成に失敗した場合はデータを削除せず、残します。
 
-コンテナ実行時は Bot と Controller がホストの `./services/data` をコンテナ内の `/data` として共有します。
+コンテナ実行時は Bot と Controller がホストの `./data` をコンテナ内の `/data` として共有します。
 
 ### 要約に失敗した場合のリトライ
 
 要約の生成に失敗した場合、対象の録音フォルダーは削除されずに残ります。対象フォルダーを確認し、`rec_end.dat` を作成すると Controller が再度処理します。
 
 ```bash
-cd services/data
+cd data
 ls
 cd 2026-09-01_00-00-00
 touch rec_end.dat

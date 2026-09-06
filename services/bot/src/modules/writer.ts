@@ -5,7 +5,7 @@ import { getFileNameDate } from "./lib.js";
 import { logger } from "../logger.js";
 
 const DATA_DIR =
-  process.env.DATA_DIR ?? path.resolve(process.cwd(), "..", "data");
+  process.env.DATA_DIR ?? path.resolve(process.cwd(), "../..", "data");
 
 export default class Writer {
   /*
