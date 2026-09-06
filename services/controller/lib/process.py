@@ -60,7 +60,7 @@ class Process:
                         summary = self.llm.generate_summary(content)
                         self.data._write_summary(folder, summary, 3 - count)
                         if summary != "":
-                            if not Lib.is_text_jp(summary):
+                            if not Lib.is_text_jp(summary) or Lib.is_over_text_len(summary, 2000):
                                 summary = Lib.translate_text_en2jp(summary)
                                 self.data._write_summary(folder, summary, 0)
                             break
