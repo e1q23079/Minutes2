@@ -13,6 +13,7 @@ dist/
 rec_*.wav
 rec_*.dat
 transcription.txt
+summary_*.txt
 
 # .venv
 .venv/
