@@ -54,7 +54,7 @@ class Data:
         """
         try:
             date = datetime.strptime(folder.name, "%Y-%m-%d_%H-%M-%S")
-            date_text = date.strftime("%Y-%m-%d %H:%M:%S")
+            date_text = date.strftime("%Y/%m/%d %H:%M:%S")
             transcription_name = f"【議事録】 {date_text}"
             return transcription_name
         except ValueError:

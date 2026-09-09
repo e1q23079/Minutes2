@@ -25,4 +25,4 @@ class TestData(unittest.TestCase):
         get_transcription_name メソッドのテスト
         """
         transcription_name = self.data.get_transcription_name(self.test_path)
-        self.assertEqual(transcription_name, "【議事録】 2026-01-01 00:00:00")
+        self.assertEqual(transcription_name, "【議事録】 2026/01/01 00:00:00")
