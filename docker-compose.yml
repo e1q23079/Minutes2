@@ -25,6 +25,7 @@ services:
     environment:
       - WEBHOOK_URL=${WEBHOOK_URL}
       - DATA_DIR=/data
+      - MODEL_SIZE=${MODEL_SIZE:-small}
       - OLLAMA_HOST=http://ollama:11434
       - TZ=Asia/Tokyo
     volumes:
