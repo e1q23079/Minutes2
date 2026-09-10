@@ -30,6 +30,6 @@ class Transcriber:
         Returns:
             str: 文字起こし結果。
         """
-        segments, _ = self.model.transcribe(str(audio_path), beam_size=5, language="ja")
+        segments, _ = self.model.transcribe(str(audio_path), beam_size=1, language="ja")
         transcription = "".join(segment.text for segment in segments).strip()
         return transcription
