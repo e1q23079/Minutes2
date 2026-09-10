@@ -14,6 +14,7 @@ load_dotenv()
 
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 FILE_PATH = os.environ.get("DATA_DIR", "../../data")
+MODEL_SIZE = os.environ.get("MODEL_SIZE", "small")
 
 INTERVAL = 60
 
@@ -24,7 +25,7 @@ def main():
     """
 
     try:
-        transcriber = Transcriber()
+        transcriber = Transcriber(model_size=MODEL_SIZE)
         data = Data(Path(FILE_PATH), transcriber)
         if not WEBHOOK_URL:
             raise ValueError("Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。")

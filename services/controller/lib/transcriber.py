@@ -12,14 +12,15 @@ class Transcriber:
         model (WhisperModel): Whisperモデルのインスタンス。
     """
 
-    def __init__(self, device: str = "cpu", compute_type: str = "int8"):
+    def __init__(self, device: str = "cpu", compute_type: str = "int8", model_size: str = "small"):
         """
         Args:
             device (str): モデルを実行するデバイス。デフォルトは "cpu"。
             compute_type (str): モデルの計算タイプ。デフォルトは "int8"。
+            model_size (str): モデルのサイズ。デフォルトは "small"。
         """
-        logger.info(f"Whisperを初期化しています。device={device}, compute_type={compute_type}")
-        self.model = WhisperModel("small", device=device, compute_type=compute_type)
+        logger.info(f"Whisperを初期化しています。device={device}, compute_type={compute_type}, model_size={model_size}")
+        self.model = WhisperModel(model_size, device=device, compute_type=compute_type)
         logger.info("Whisperの初期化が完了しました。")
 
     def transcribe(self, audio_path: Path) -> str:
@@ -30,6 +31,6 @@ class Transcriber:
         Returns:
             str: 文字起こし結果。
         """
-        segments, _ = self.model.transcribe(str(audio_path), beam_size=5, language="ja")
+        segments, _ = self.model.transcribe(str(audio_path), beam_size=1, language="ja")
         transcription = "".join(segment.text for segment in segments).strip()
         return transcription

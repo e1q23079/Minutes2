@@ -25,7 +25,9 @@ services:
     environment:
       - WEBHOOK_URL=${WEBHOOK_URL}
       - DATA_DIR=/data
+      - MODEL_SIZE=${MODEL_SIZE:-small}
       - OLLAMA_HOST=http://ollama:11434
+      - TZ=Asia/Tokyo
     volumes:
       - ./data:/data
     depends_on:
@@ -40,6 +42,8 @@ services:
       dockerfile: Dockerfile
     restart: always
     container_name: minutes-llm
+    environment:
+      - TZ=Asia/Tokyo
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 5s
