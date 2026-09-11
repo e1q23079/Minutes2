@@ -45,8 +45,11 @@ class Process:
                     message_id = self.notification.send_notification(message)
                     if message_id is None:
                         continue
-                    # データを読み込み
-                    content = self.data.get_transcription(folder)
+                    # transcription データを取得
+                    content = self.data.get_transcription_data(folder)
+                    if content is None:
+                        # データを読み込み
+                        content = self.data.get_transcription(folder)
                     if content is None:
                         # 音声ファイルが空の場合はフォルダーを削除して次のフォルダーへ
                         self.data.delete_folder(folder)
