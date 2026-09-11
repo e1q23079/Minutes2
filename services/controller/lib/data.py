@@ -125,6 +125,25 @@ class Data:
         except Exception as e:
             logger.error(f"ファイルの書き込みに失敗しました: {file_path}. エラー: {e}")
 
+    def get_transcription_data(self, folder: Path) -> str | None:
+        """
+        指定されたフォルダー内の transcription.txt ファイルから文字起こしデータを取得します。
+        Args:
+            folder (Path): transcription.txt ファイルを読み込むフォルダーのパス。
+        Returns:
+            str | None: 文字起こしデータを返します。ファイルが存在しない場合は None を返します。
+        """
+        file_path = folder / "transcription.txt"
+        if not file_path.is_file():
+            return None
+        try:
+            content = file_path.read_text(encoding="utf-8")
+            logger.info(f"フォルダー {folder} 内の transcription.txt ファイルから文字起こしデータを取得しました。")
+            return content
+        except OSError as e:
+            logger.error(f"ファイルの読み込みに失敗しました: {file_path}. エラー: {e}")
+            return None
+
     def _write_summary(self, folder_path: Path, content: str, attempt: int) -> None:
         """
         指定されたフォルダー内の summary_*.txt ファイルに内容を書き込みます。
