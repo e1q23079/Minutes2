@@ -32,7 +32,13 @@ class Transcriber:
             str: 文字起こし結果。
         """
         segments, _ = self.model.transcribe(
-            str(audio_path), beam_size=1, language="ja", vad_filter=True, vad_parameters={"min_silence_duration_ms": 500, "speech_pad_ms": 200}, condition_on_previous_text=False
+            str(audio_path),
+            beam_size=1,
+            language="ja",
+            vad_filter=True,
+            vad_parameters={"min_silence_duration_ms": 500, "speech_pad_ms": 200},
+            initial_prompt="これは会議の音声を日本語で文字起するための音声です。",
+            condition_on_previous_text=False,
         )
         transcription = "".join(segment.text for segment in segments).strip()
         return transcription
