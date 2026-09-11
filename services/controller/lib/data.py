@@ -71,9 +71,16 @@ class Data:
         """
         logger.info(f"フォルダー {folder} の音声ファイルを文字起こししています。")
         transcriptions = []
-        for file in sorted(folder.glob("rec_*.wav")):
+        files = sorted(folder.glob("rec_*.wav"))
+        total_num = len(files)
+        if total_num == 0:
+            logger.warning(f"フォルダー {folder} に音声ファイルが存在しません。")
+            return None
+        for file in files:
             transcription = self.transcriber.transcribe(file)
             transcriptions.append(transcription)
+            progress = (len(transcriptions) / total_num) * 100
+            logger.info(f"フォルダー {folder} の文字起こし進捗: {progress:.2f}% ({len(transcriptions)}/{len(files)})")
         text = "\n".join(transcriptions)
         logger.info(f"フォルダー {folder} の文字起こしが完了しました。")
         # 文字起こし結果を transcription.txt に書き込む
