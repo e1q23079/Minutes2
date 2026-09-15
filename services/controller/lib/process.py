@@ -15,20 +15,24 @@ class Process:
         data (Data): データ操作を行うための Data クラスのインスタンス。
         notification (Notification): 通知を送信するための Notification クラスのインスタンス。
         interval (int): データ処理の間隔（秒単位）。
+        delete_files (bool): 処理が完了したファイルを削除するかどうか。デフォルトは True。
     """
 
-    def __init__(self, data: Data, notification: Notification, interval: int = 10):
+    def __init__(self, data: Data, notification: Notification, interval: int = 10, delete_files: bool = True):
         """
         Args:
             data (Data): データ操作を行うための Data クラスのインスタンス。
             notification (Notification): 通知を送信するための Notification クラスのインスタンス。
             interval (int, optional): データ処理の間隔（秒単位）。デフォルトは 10 秒。
+            delete_files (bool, optional): 処理が完了したファイルを削除するかどうか。デフォルトは True。
         """
         self.data = data
         self.notification = notification
         self.interval = interval
         self._stop_event = threading.Event()
         self.llm = LLM()
+        self.delete_files = delete_files
+        logger.info(f"Process initialized with interval: {self.interval} seconds and delete_files: {self.delete_files}")
 
     def _processing(self):
         """
@@ -79,8 +83,12 @@ class Process:
                         message = make_content(folder, self.data, summary)
                         self.notification.edit_notification(message_id, message)
                     if success:
-                        # 処理が完了したファイルを削除
-                        self.data.delete_folder(folder)
+                        if self.delete_files:
+                            # 処理が完了したファイルを削除
+                            self.data.delete_folder(folder)
+                        else:
+                            # end_dat ファイルを削除して次のフォルダーへ
+                            self.data.delete_end_dat(folder)
                     else:
                         # end_dat ファイルを削除して次のフォルダーへ
                         self.data.delete_end_dat(folder)

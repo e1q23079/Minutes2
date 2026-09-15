@@ -33,6 +33,7 @@ services:
       - MODEL_SIZE=${MODEL_SIZE:-small}
       - OLLAMA_HOST=http://ollama:11434
       - TZ=Asia/Tokyo
+      - DELETE_FILES=${DELETE_FILES:-True}
     volumes:
       - ./data:/data
     logging:
