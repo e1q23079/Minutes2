@@ -15,6 +15,7 @@ load_dotenv()
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 FILE_PATH = os.environ.get("DATA_DIR", "../../data")
 MODEL_SIZE = os.environ.get("MODEL_SIZE", "small")
+DELETE_FILES = os.environ.get("DELETE_FILES", "True").lower() == "true"
 
 INTERVAL = 60
 
@@ -30,7 +31,7 @@ def main():
         if not WEBHOOK_URL:
             raise ValueError("Webhook URL が設定されていません。環境変数 'WEBHOOK_URL' を確認してください。")
         notification = Notification(WEBHOOK_URL)
-        process = Process(data, notification, interval=INTERVAL)
+        process = Process(data, notification, interval=INTERVAL, delete_files=DELETE_FILES)
 
         def shutdown(signum, frame):
             process.stop()
