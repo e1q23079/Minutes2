@@ -33,6 +33,34 @@ docker compose version
 
 ## Dockerの実行設定
 
+現在のユーザーを`docker`グループに追加すると、毎回`sudo`を付けずにDockerを実行できます。
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+グループ設定を反映するため、いったんSSHセッションからログアウトして再接続してください。
+
+Dockerのsystemd設定を編集し、`[Service]`セクションに次の設定を追加します。
+
+```bash
+sudo systemctl edit docker
+```
+
+```ini
+[Service]
+Environment="MOBY_DISABLE_PIGZ=true"
+```
+
+設定を反映してDockerを再起動します。
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+## スワップ領域の設定
+
 スワップ領域の状態を確認
 
 ```bash
@@ -63,30 +91,4 @@ sudo swapon /swapfile
 
 ```bash
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-```
-
-現在のユーザーを`docker`グループに追加すると、毎回`sudo`を付けずにDockerを実行できます。
-
-```bash
-sudo usermod -aG docker $USER
-```
-
-グループ設定を反映するため、いったんSSHセッションからログアウトして再接続してください。
-
-Dockerのsystemd設定を編集し、`[Service]`セクションに次の設定を追加します。
-
-```bash
-sudo systemctl edit docker
-```
-
-```ini
-[Service]
-Environment="MOBY_DISABLE_PIGZ=true"
-```
-
-設定を反映してDockerを再起動します。
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart docker
 ```
